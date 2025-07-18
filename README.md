@@ -44,3 +44,9 @@
 ![Latest Data - Host VM](image-5.png)
 
 ![Latest Data - Zabbix Server](image-6.png)
+
+Задание 3:
+
+![Windows Host](image-7.png)
+
+![All Hosts](image-8.png)
