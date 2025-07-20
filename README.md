@@ -7,46 +7,35 @@
 
 Домашнее задания "Система мониторинга Zabbix"
 
-Задание 1:
+Задание 1
+Создайте свой шаблон, в котором будут элементы данных, мониторящие загрузку CPU и RAM хоста.
+![Задание 1. Настройки item](image.png)
+![Задание 1. Результат](image-1.png)
 
-* sudo apt install postgresql
-* wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_7.0+ubuntu22.04_all.deb
-* dpkg -i zabbix-release_latest_7.0+ubuntu22.04_all.deb
-* apt update
-* apt install zabbix-server-pgsql zabbix-frontend-php php8.1-pgsql zabbix-apache-conf zabbix-sql-scripts
-* su - postgres--c 'psql --command "CREATE USER zabbix WITH PASSWORD '\'ABC\' ';"'
-* su - postgres--c 'psql --command "CREATE DATABASE zabbix OWNER zabbix';"'
-* zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | sudo -u zabbix psql zabbix
-* sed -i 's/# DBPassword=/DBPassword=DEF/g' /etc/zabbix/zabbix_server.conf
-* systemctl restart zabbix-server zabbix-agent apache2
-* systemctl enable zabbix-server zabbix-agent apache2
+Задание 2
+Добавьте в Zabbix два хоста и задайте им имена <фамилия и инициалы-1> и <фамилия и инициалы-2>. Например: ivanovii-1 и ivanovii-2.
+![Задание 2. Hosts](image-2.png)
 
+Задание 3
+Привяжите созданный шаблон к двум хостам. Также привяжите к обоим хостам шаблон Linux by Zabbix Agent.
+![VM1 Привязан мой шаблон](image-3.png)
+![VM2 Привязан шаблонк Windows by Zabbix Agent](image-4.png)
+![VM3 Привязаны шаблоны Linux by Zabbix Agent и Zabbix server health](image-5.png)
 
-![Скриншот входа](image.png)
-![Zabbix Server Status](image-1.png)
+Задание 4
+Создайте свой кастомный дашборд.
+![Dashboard](image-6.png)
 
+Задание 5* со звёздочкой
+Создайте карту и расположите на ней два своих хоста.
+![Test Map](image-7.png)
 
-Задание 2:
-* wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_7.0+ubuntu22.04_all.deb
-* dpkg -i zabbix-release_latest_7.0+ubuntu22.04_all.deb
-* apt update
-* apt install zabbix-agent
-* systemctl restart zabbix-agent
-* systemctl enable zabbix-agent
-* sed -i 's/Server=127.0.0.1/Server=10.0.2.20/g' /home/user# nano /etc/zabbix/zabbix_agentd.conf
+Задание 6* со звёздочкой
+Создайте UserParameter на bash и прикрепите его к созданному вами ранее шаблону. Он должен вызывать скрипт, который:
 
-![root@vm-nix-ubnt10:/home/user# tail /var/log/zabbix/zabbix_agentd.log](image-2.png)
+Задание 7* со звёздочкой
+Доработайте Python-скрипт из лекции, создайте для него UserParameter и прикрепите его к созданному вами ранее шаблону. 
 
-![root@vm-nix-ubnt11:/home/user# tail  /var/log/zabbix/zabbix_agentd.log](image-3.png)
+Задание 8* со звёздочкой
+Настройте автообнаружение и прикрепление к хостам созданного вами ранее шаблона.
 
-![Configuration - Hosts](image-4.png)
-
-![Latest Data - Host VM](image-5.png)
-
-![Latest Data - Zabbix Server](image-6.png)
-
-Задание 3:
-
-![Windows Host](image-7.png)
-
-![All Hosts](image-8.png)
