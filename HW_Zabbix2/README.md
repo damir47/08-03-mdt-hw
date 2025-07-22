@@ -10,6 +10,7 @@
 
 Задание 3
 Привяжите созданный шаблон к двум хостам. Также привяжите к обоим хостам шаблон Linux by Zabbix Agent.
+![Hosts](image-17.png)
 ![Latest data](image-4.png)
 ![host 1](image-5.png)
 ![host 2](image-6.png)
