@@ -137,5 +137,6 @@ Jul 25 01:48:38 vm-nix-ubnt14 avahi-daemon[583]: Registering new address record 
 
 
 Никак не могу понять почему не видит файл:
+```
 Jul 25 01:48:34 vm-nix-ubnt14 Keepalived_vrrp[19447]: (/etc/keepalived/keepalived.conf: Line 24) (VI_1) track file /etc/keepalived/loadavarage.txt not found, ignoring...
-
+```
