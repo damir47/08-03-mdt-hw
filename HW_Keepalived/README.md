@@ -21,12 +21,9 @@
 Задание 3*
 Изучите дополнительно возможность Keepalived, которая называется vrrp_track_file
 Напишите bash-скрипт, который будет менять приоритет внутри файла в зависимости от нагрузки на виртуальную машину (можно разместить данный скрипт в cron и запускать каждую минуту). Рассчитывать приоритет можно, например, на основании Load average.
-Настройте Keepalived на отслеживание данного файла.
-Нагрузите одну из виртуальных машин, которая находится в состоянии MASTER и имеет активный виртуальный IP и проверьте, чтобы через некоторое время она перешла в состояние SLAVE из-за высокой нагрузки и виртуальный IP переехал на другой, менее нагруженный сервер.
-Попробуйте выполнить настройку keepalived на третьем сервере и скорректировать при необходимости формулу так, чтобы плавающий ip адрес всегда был прикреплен к серверу, имеющему наименьшую нагрузку.
-На проверку отправьте получившийся bash-скрипт и конфигурационный файл keepalived, а также скриншоты логов keepalived с серверов при разных нагрузках
 
 root@vm-nix-ubnt14:/etc/keepalived# cat keepalived.conf 
+```
 vrrp_script check_web {
     script "/etc/keepalived/webcheck.sh"
     interval 3
@@ -53,13 +50,15 @@ vrrp_instance VI_1 {
         "/etc/keepalived/loadavarage.txt"
     }
 }
-
-
+```
 
 Настроил crontab
+```
 * * * * * /etc/keepalived/filecheck.sh >> /var/log/filecheck.log 2>&1
+```
 
 root@vm-nix-ubnt14:/etc/keepalived# tail -f /var/log/filecheck.log
+```
 Load Avarage is - 4.24 
 Priority is - 50
 Load Avarage is - 4.09 
@@ -72,9 +71,10 @@ Load Avarage is - 0.75
 Priority is - 100
 Load Avarage is - 0.27 
 Priority is - 100
-^C
+```
 
-oot@vm-nix-ubnt14:/etc/keepalived# cat filecheck.sh 
+```
+root@vm-nix-ubnt14:/etc/keepalived# cat filecheck.sh 
 #/bin/bash
 priority=50
 load=$(cat /proc/loadavg | awk '{ print $1 }')
@@ -87,7 +87,8 @@ fi
 echo "$priority" > /etc/keepalived/loadavarage.txt
 echo "Load Avarage is - $load "
 echo "Priority is - $priority"
-
+```
+```
 root@vm-nix-ubnt14:/etc/keepalived# systemctl restart keepalived
 root@vm-nix-ubnt14:/etc/keepalived# systemctl status keepalived
 ● keepalived.service - Keepalive Daemon (LVS and VRRP)
@@ -111,8 +112,9 @@ root@vm-nix-ubnt14:/etc/keepalived# systemctl status keepalived
 июл 25 01:48:36 vm-nix-ubnt14 Keepalived_vrrp[19447]: (VI_1) received lower priority (110) advert from 10.0.2.25 - discarding
 июл 25 01:48:37 vm-nix-ubnt14 Keepalived_vrrp[19447]: (VI_1) received lower priority (110) advert from 10.0.2.25 - discarding
 июл 25 01:48:38 vm-nix-ubnt14 Keepalived_vrrp[19447]: (VI_1) Entering MASTER STATE
-
+```
 Логи:
+```
 Jul 25 01:48:34 vm-nix-ubnt14 Keepalived[19446]: Starting Keepalived v2.2.4 (08/21,2021)
 Jul 25 01:48:34 vm-nix-ubnt14 Keepalived[19446]: Running on Linux 6.8.0-64-generic #67~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Jun 24 15:19:46 UTC 2 (built for Linux 5.15.27)
 Jul 25 01:48:34 vm-nix-ubnt14 Keepalived[19446]: Command line: '/usr/sbin/keepalived' '--dont-fork'
@@ -131,7 +133,7 @@ Jul 25 01:48:35 vm-nix-ubnt14 Keepalived_vrrp[19447]: (VI_1) received lower prio
 Jul 25 01:48:37 vm-nix-ubnt14 Keepalived_vrrp[19447]: message repeated 2 times: [ (VI_1) received lower priority (110) advert from 10.0.2.25 - discarding]
 Jul 25 01:48:38 vm-nix-ubnt14 Keepalived_vrrp[19447]: (VI_1) Entering MASTER STATE
 Jul 25 01:48:38 vm-nix-ubnt14 avahi-daemon[583]: Registering new address record for 10.0.2.199 on enp0s3.IPv4.
-
+```
 
 
 Никак не могу понять почему не видит файл:
