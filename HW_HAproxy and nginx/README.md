@@ -23,7 +23,9 @@
 - Настройте связку HAProxy + Nginx как было показано на лекции.
 - Настройте Nginx так, чтобы файлы .jpg выдавались самим Nginx (предварительно разместите несколько тестовых картинок в директории /var/www/), а остальные запросы переадресовывались на HAProxy, который в свою очередь переадресовывал их на два Simple Python server.
 - На проверку направьте конфигурационные файлы nginx, HAProxy, скриншоты с запросами jpg картинок и других файлов на Simple Python Server, демонстрирующие корректную настройку.
-
+[root@vm-nix-ubnt:/etc/haproxy# cat haproxy.cfg](haproxy_ex3.cfg)
+[root@vm-nix-ubnt:/etc/nginx/conf.d# cat example-http.conf ](nginx_ex3.conf)
+![Log_Ex3](image-2.png)
 
 ### Задание 4*
 - Запустите 4 simple python сервера на разных портах.
@@ -32,4 +34,6 @@
 - Настройте два бэкенда HAProxy
 - Настройте фронтенд HAProxy так, чтобы в зависимости от запрашиваемого сайта example1.local или example2.local запросы перенаправлялись на разные бэкенды HAProxy
 - На проверку направьте конфигурационный файл HAProxy, скриншоты, демонстрирующие запросы к разным фронтендам и ответам от разных бэкендов.
-
+[root@vm-nix-ubnt:/etc/haproxy# cat haproxy.cfg](haproxy_ex4.cfg)
+![Log_Ex4](image-3.png)
+![Stats](image-4.png)
