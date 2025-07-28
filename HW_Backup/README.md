@@ -46,7 +46,8 @@ fi
 user@vm-nix-ubnt:~$ sudo rsync -avc --exclude='.*' --bwlimit=1M /home/user user@10.0.2.25:/tmp/backup --log-file=/etc/log/backuplog-ext.log
 '''
 
-'''user@vm-nix-ubnt:~$ sudo rsync -avc --exclude='.*' --bwlimit=1M /home/user user@10.0.2.25:/tmp/backup --log-file=/etc/log/backuplog-ext.log
+'''
+user@vm-nix-ubnt:~$ sudo rsync -avc --exclude='.*' --bwlimit=1M /home/user user@10.0.2.25:/tmp/backup --log-file=/etc/log/backuplog-ext.log
 [sudo] password for user: 
 The authenticity of host '10.0.2.25 (10.0.2.25)' can't be established.
 ED25519 key fingerprint is SHA256:GPYnTlmYlNRgZgDFlZrJLCwRKm7BVlvMxU54/RaWN6o.
