@@ -6,6 +6,10 @@
 - Необходимо сделать так, чтобы rsync подсчитывал хэш-суммы для всех файлов, даже если их время модификации и размер идентичны в источнике и приемнике.
 - На проверку направить скриншот с командой и результатом ее выполнения
 
+---
+user@vm-nix-ubnt:~$ rsync -avc --exclude '.*' /home/user /tmp/backup
+---
+![Log_ex1](image.png)
 
 
 ### Задание 2
@@ -15,6 +19,23 @@
 - Резервная копия размещается локально, в директории `/tmp/backup`
 - На проверку направить файл crontab и скриншот с результатом работы утилиты.
 
+---
+ser@vm-nix-ubnt:/etc/backup$ cat backup.sh
+#!/bin/bash
+
+rsync -avc --exclude='.*' /home/user /tmp/backup --log-file=/etc/log/backuplog.log
+
+if [ "$?" -eq 0 ]; then
+    date "+%Y-%m-%d %H:%M:%S BACKUP SUCCESS" >> /etc/log/backup_result.log
+else
+    date "+%Y-%m-%d %H:%M:%S BACKUP FAILED" >> /etc/log/backup_result.log
+fi
+---
+---
+0 0 * * *  bash /etc/backub/backup.sh
+---
+
+![Работа bash скрипта](image-1.png)
 
 
 ### Задание 3*
