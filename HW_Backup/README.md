@@ -66,11 +66,11 @@ user@vm-nix-ubnt:~$ sudo rsync -avc --exclude='.*' --bwlimit=1M /home/user user@
 ### Решение 4
 
 - Cron на сервере хранения бекапов
-'''
+```
 root@vm-nix-ubnt:/etc/backup# crontab -l
 # m h  dom mon dow   command
 0 0 * * * sudo rsync -avc --exclude='.*' --bwlimit=1M /home/user user@10.0.2.25:/var/backup --log-file=/etc/log/backuplog-ext.log
-'''
+```
 
 - Скрины выполнения
 
@@ -78,7 +78,7 @@ root@vm-nix-ubnt:/etc/backup# crontab -l
 ![На целевом сервере делаем инкримент](image-6.png)
 
 - Текст bash скрипта для inc backup
-'''
+```
 root@vm-nix-ubnt15:/etc/backup# cat backup_inc.sh
 #!/bin/bash
 
@@ -95,11 +95,9 @@ echo "OLDEST SNAPSHOT: $OLDEST"
 if [[ $COUNT_SNAPS -gt 5 ]]; then
     rm -rf "${SNAP_DIR}/${OLDEST}"
 fi
-
-'''
+```
 
 - Cron на сервере хранения бекапов
-'''
+```
 00 01 * * * bash /etc/backup/backup_inc.sh
-
-'''
+```
