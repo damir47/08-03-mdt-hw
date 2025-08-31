@@ -7,7 +7,6 @@
 - Данные для чтения из БД
 - Картинки и контент с web-сайтов
 
-
 ---
 
 ### Задание 2. Memcached
@@ -25,6 +24,24 @@ root@vm-nix-ubnt17:/home/user# apt-install memcached
 ### Задание 3. Удаление по TTL в Memcached
 Запишите в memcached несколько ключей с любыми именами и значениями, для которых выставлен TTL 5. 
 *Приведите скриншот, на котором видно, что спустя 5 секунд ключи удалились из базы.*
+```
+root@vm-nix-ubnt17:/home/user# telnet localhost 11211
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+
+add key1 0 5 5
+hello
+get key1
+
+add world 0 5 5
+world
+get keyw
+
+! На скриншоте с параметрами 0 10 5, т.к. за 5 секунд не всегда успевал написать команду
+```
+
+![memcached](image-1.png)
 
 ---
 
