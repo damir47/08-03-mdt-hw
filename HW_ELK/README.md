@@ -5,7 +5,6 @@
 *Приведите скриншот команды 'curl -X GET 'localhost:9200/_cluster/health?pretty', сделанной на сервере с установленным Elasticsearch. Где будет виден нестандартный cluster_name*.
 
 ### Решение
-
 ![Elasticsearch](image.png)
 ---
 
@@ -15,6 +14,8 @@
 
 *Приведите скриншот интерфейса Kibana на странице http://<ip вашего сервера>:5601/app/dev_tools#/console, где будет выполнен запрос GET /_cluster/health?pretty*.
 
+### Решение
+![Kibana](image-1.png)
 ---
 
 ### Задание 3. Logstash

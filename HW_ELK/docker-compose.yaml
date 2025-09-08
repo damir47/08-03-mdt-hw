@@ -2,44 +2,47 @@ version: '3.9'
 
 services:
   elasticsearch:
-    image: elasticsearch:9.1.3
+    image: elasticsearch:9.1.2
     ports:
       - 9200:9200
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - cluster.name=es-mdt-docker-cluster
-      - xpack.security.enabled=false
-
+#      - xpack.security.enabled=false
 
   logstash:
-    image: logstash:9.1.3
+    image: logstash:9.1.2
     ports:
       - 5044:5044
     volumes:
-      - ./logstash:/usr/share/logstash/config
+#      - ./logstash:/usr/share/logstash/config
+      - ./logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml
+      - ./logstash/nginx.conf:/usr/share/logstash/config/nginx.conf    
 
 
   filebeat:
-    image: elastic/filebeat:9.1.3
+#    image: elastic/filebeat:9.1.2
+    image: elastic/filebeat:8.19.2
     depends_on:
       - elasticsearch
       - logstash
       - nginx
     volumes:
-      - ./logs:/var/logs/nginx:ro
+      - ./logs:/var/log/nginx:ro
       - ./logstash/filebeat.yml:/usr/share/filebeat/filebeat.yml
 
 
   kibana:
-    image: kibana:9.1.3
+    image: kibana:9.1.2
     ports:
       - 5601:5601
-
+    depends_on:
+      - elasticsearch
 
   nginx:
     image: nginx:stable-alpine3.21-perl
     ports:
       - 8080:80
     volumes:
-      - ./logs:/var/logs/nginx
+      - ./logs:/var/log/nginx
