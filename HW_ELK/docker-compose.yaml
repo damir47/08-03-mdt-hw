@@ -7,9 +7,11 @@ services:
       - 9200:9200
     container_name: elasticsearch
     environment:
-      - discovery.type=single-node
-      - cluster.name=es-mdt-docker-cluster
-#      - xpack.security.enabled=false
+      discovery.type: single-node
+      ELASTIC_USERNAME: "elastic"
+      ELASTIC_PASSWORD: "WaYhJhFtzajPY2Pb=Oxn"
+      cluster.name: es-mdt-docker-cluster
+#     xpack.security.enabled: false
 
   logstash:
     image: logstash:9.1.2
@@ -18,8 +20,7 @@ services:
     volumes:
 #      - ./logstash:/usr/share/logstash/config
       - ./logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml
-      - ./logstash/nginx.conf:/usr/share/logstash/config/nginx.conf    
-
+      - ./logstash/nginx.conf:/usr/share/logstash/config/nginx.conf 
 
   filebeat:
 #    image: elastic/filebeat:9.1.2
@@ -39,6 +40,8 @@ services:
       - 5601:5601
     depends_on:
       - elasticsearch
+    environment:
+      ELASTICSEARCH_HOSTS: '["elasticsearch:9200"]'
 
   nginx:
     image: nginx:stable-alpine3.21-perl
