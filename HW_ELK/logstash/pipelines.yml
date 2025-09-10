@@ -1,5 +1,6 @@
-- pipeline.id: service_stamped_json_logs_mdt
+- pipeline.id: nginx_pipeline
   pipeline.workers: 1
   pipeline.batch.size: 1
   path.config: "/usr/share/logstash/config/nginx.conf"
+
   
