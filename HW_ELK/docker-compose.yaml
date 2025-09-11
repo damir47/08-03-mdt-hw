@@ -14,6 +14,9 @@ services:
       xpack.security.http.ssl.enabled: false
       xpack.security.enabled: false
       cluster.routing.allocation.disk.threshold_enabled: false
+      cluster.routing.allocation.disk.watermark.low: 500mb
+      cluster.routing.allocation.disk.watermark.high: 200mb
+      cluster.routing.allocation.disk.watermark.flood_stage: 100mb
 
   logstash:
     image: logstash:9.1.3
