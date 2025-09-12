@@ -39,7 +39,7 @@
 
 ### Решение
 ![Filebeat](image-2.png)
-
+![filebeat 2](image-5.png)
 
 ### Задание 5*. Доставка данных 
 
