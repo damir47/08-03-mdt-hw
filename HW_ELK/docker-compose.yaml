@@ -32,7 +32,7 @@ services:
       - ./logstash/nginx.conf:/usr/share/logstash/config/nginx.conf
       - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
 #      - ./logs:/var/log/nginx:ro
-      - nginx_logs:/var/log/nginx:ro
+      - ./nginx_logs:/var/log/nginx:ro
 
 
 
@@ -44,7 +44,7 @@ services:
       - nginx
     volumes:
 #      - ./logs:/var/log/nginx:ro
-      - nginx_logs:/var/log/nginx:ro
+      - ./nginx_logs:/var/log/nginx:ro
       - ./logstash/filebeat.yml:/usr/share/filebeat/filebeat.yml
 
 
@@ -63,7 +63,7 @@ services:
     ports:
       - 80:80
     volumes:
-      - nginx_logs:/var/log/nginx
+      - ./nginx_logs:/var/log/nginx
 #      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/html:/usr/share/nginx/html
     depends_on:
