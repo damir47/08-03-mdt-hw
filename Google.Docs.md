@@ -94,3 +94,5 @@ https://docs.google.com/document/d/1F3eSG-J7BPzNyzsK5eGV2y7ZE-Aq1XKx2H7Vu9ieH-0/
 Миниахметов Дамир. Базы данных, их типы
 https://docs.google.com/document/d/1iaQ8th0dmIXtMnMsAnusIBtcBDPgY7WFjnXkJRinS_k/edit?usp=sharing
 
+
+.
