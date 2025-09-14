@@ -1,0 +1,15 @@
+version: '3.9'
+services:
+  rabbitmq1:
+    image: rabbitmq:3.13.7-management
+    hostname: rabbitmq-mdt-1
+    containername: rabbitmq-mdt-1
+    ports:
+      - 15672:15672
+      - 5672:5672
+    # volumes:
+    #   - ./config:/config
+    # environment:
+    #   - RABBITMQ_CONFIG_FILE=/config/rabbitmq
+    #   - RABBITMQ_ERLANG_COOKIE=QUNDYUVYFXDONRXJHJYS
+    #   - RABBITMQ_NODE_PORT=5672
