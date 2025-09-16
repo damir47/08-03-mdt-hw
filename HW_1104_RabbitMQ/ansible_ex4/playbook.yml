@@ -1,0 +1,124 @@
+---
+- name: Deploy RabbitMQ HA Cluster
+  hosts: rabbitmq_cluster
+  vars:
+    ansible_user: user
+    ansible_ssh_private_key_file: ~/.ssh/ansible
+    ansible_become_pass: user
+#    ansible_become_pass: "{{ sudo_password }}"
+
+  tasks:
+
+    - name: Update apt package cache
+      become: yes
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install required dependencies
+      become: yes
+      apt:
+        name:
+          - curl
+          - gnupg
+          - lsb-release
+          - socat
+        state: present
+
+    - name: Install Erlang from Ubuntu repositories
+      become: yes
+      apt:
+        name: erlang
+        state: present
+        update_cache: yes
+
+    - name: Install RabbitMQ from Ubuntu repositories
+      become: yes
+      apt:
+        name: rabbitmq-server
+        state: present
+        update_cache: yes
+
+    - name: Create RabbitMQ config directory
+      become: yes
+      file:
+        path: /etc/rabbitmq/
+        state: directory
+        mode: 0755
+
+    - name: Deploy RabbitMQ configuration
+      become: yes
+      template:
+        src: templates/rabbitmq.conf.j2
+        dest: /etc/rabbitmq/rabbitmq.conf
+        owner: rabbitmq
+        group: rabbitmq
+        mode: 0644
+
+    - name: Set Erlang cookie
+      become: yes
+      copy:
+        content: "{{ rabbitmq_cookie }}"
+        dest: /var/lib/rabbitmq/.erlang.cookie
+        owner: rabbitmq
+        group: rabbitmq
+        mode: 0600
+
+    - name: Enable RabbitMQ management plugin
+      become: yes
+      command: rabbitmq-plugins enable rabbitmq_management
+      become_user: rabbitmq
+
+    - name: Start and enable RabbitMQ service
+      become: yes
+      systemd:
+        name: rabbitmq-server
+        state: started
+        enabled: yes
+        daemon_reload: yes
+
+    - name: Wait for RabbitMQ to start
+      become: yes
+      wait_for:
+        port: 15672
+        delay: 10
+        timeout: 300  # Увеличим таймаут для первого запуска
+
+  post_tasks:
+    - name: Create admin user (run only on first node)
+      become: yes
+      command: >
+        rabbitmqctl add_user {{ rabbitmq_user }} {{ rabbitmq_password }} &&
+        rabbitmqctl set_user_tags {{ rabbitmq_user }} administrator &&
+        rabbitmqctl set_permissions -p / {{ rabbitmq_user }} ".*" ".*" ".*"
+      become_user: rabbitmq
+      delegate_to: "{{ groups.rabbitmq_cluster[0] }}"
+      run_once: yes
+
+    - name: Apply HA policy (run only on first node)
+      become: yes
+      command: >
+        rabbitmqctl set_policy ha-all ".*" '{"ha-mode":"all","ha-sync-mode":"automatic"}' --apply-to queues
+      become_user: rabbitmq
+      delegate_to: "{{ groups.rabbitmq_cluster[0] }}"
+      run_once: yes
+
+    - name: Show cluster status
+      become: yes
+      command: rabbitmqctl cluster_status
+      become_user: rabbitmq
+      register: cluster_status
+      changed_when: false
+
+    - name: Display cluster status
+      debug:
+        var: cluster_status.stdout_lines
+
+    - name: Join nodes to cluster (skip first node)
+      become: yes
+      command: >
+        rabbitmqctl stop_app &&
+        rabbitmqctl join_cluster rabbit@rabbitmq1 &&
+        rabbitmqctl start_app
+      become_user: rabbitmq
+      when: inventory_hostname != groups.rabbitmq_cluster[0]

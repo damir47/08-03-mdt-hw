@@ -1,0 +1,7 @@
+default_vhost = /
+default_user = {{ rabbitmq_user }}
+default_pass = {{ rabbitmq_password }}
+cluster_formation.peer_discovery_backend = rabbit_peer_discovery_classic_config
+{% for node in rabbitmq_nodes %}
+cluster_formation.classic_config.nodes.{{ loop.index }} = {{ node }}
+{% endfor %}
