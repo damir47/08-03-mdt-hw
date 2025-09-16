@@ -1,3 +1,4 @@
+
 default_vhost = /
 default_pass = password
 default_user = damir

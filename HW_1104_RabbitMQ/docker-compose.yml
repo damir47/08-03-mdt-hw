@@ -11,11 +11,13 @@ services:
       - 15672:15672
       - 5672:5672
     volumes:
-       - ./config:/config
+      - ./config:/config
     environment:
-       - RABBITMQ_CONFIG_FILE=/config/rabbitmq
-       - RABBITMQ_ERLANG_COOKIE=RXPNMZJLYSWMTNNXZLST
-       - RABBITMQ_NODE_PORT=5672
+      - RABBITMQ_CONFIG_FILE=/config/rabbitmq
+      - RABBITMQ_ERLANG_COOKIE=RXPNMZJLYSWMTNNXZLST
+      - RABBITMQ_NODE_PORT=5672
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error}]
+      - RABBITMQ_DISTRIBUTION_BUFFER_SIZE=128000
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "check_running"]
       interval: 10s
@@ -28,28 +30,40 @@ services:
     container_name: rabbitmq-mdt-2
     networks:
       - rabbitmq-network
+    ports:
+      - 15673:15672
+      - 5673:5672
     volumes:
-       - ./config:/config
+      - ./config:/config
     environment:
-       - RABBITMQ_CONFIG_FILE=/config/rabbitmq
-       - RABBITMQ_ERLANG_COOKIE=RXPNMZJLYSWMTNNXZLST
-       - RABBITMQ_NODE_PORT=5672
+      - RABBITMQ_CONFIG_FILE=/config/rabbitmq
+      - RABBITMQ_ERLANG_COOKIE=RXPNMZJLYSWMTNNXZLST
+      - RABBITMQ_NODE_PORT=5672
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error}]
+      - RABBITMQ_DISTRIBUTION_BUFFER_SIZE=128000
+
     depends_on:
       rabbitmq1:
-          condition: service_healthy
+        condition: service_healthy
 
   rabbitmq3:
     image: rabbitmq:3.13.7-management
     hostname: rabbitmq3
     container_name: rabbitmq-mdt-3
+    ports:
+      - 15674:15672
+      - 5674:5672
     networks:
       - rabbitmq-network
     volumes:
-       - ./config:/config
+      - ./config:/config
     environment:
-       - RABBITMQ_CONFIG_FILE=/config/rabbitmq
-       - RABBITMQ_ERLANG_COOKIE=RXPNMZJLYSWMTNNXZLST
-       - RABBITMQ_NODE_PORT=5672
+      - RABBITMQ_CONFIG_FILE=/config/rabbitmq
+      - RABBITMQ_ERLANG_COOKIE=RXPNMZJLYSWMTNNXZLST
+      - RABBITMQ_NODE_PORT=5672
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error}]
+      - RABBITMQ_DISTRIBUTION_BUFFER_SIZE=128000
+
     depends_on:
       rabbitmq1:
         condition: service_healthy
