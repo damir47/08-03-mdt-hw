@@ -31,35 +31,38 @@
 ### Задание 3
 Получите информацию, за какой месяц была получена наибольшая сумма платежей, и добавьте информацию по количеству аренд за этот месяц.
 
+![Данные по году-месяцу](image-2.png)
+
 ```
 # Вариант 1
     SELECT
-        MONTH(p.payment_date),
+ 		DATE_FORMAT(p.payment_date, '%Y-%m') AS formatted_date,
         SUM(p.amount) as sum_max,
         COUNT(p.rental_id)
     FROM payment p
-    GROUP BY MONTH(p.payment_date)
+    GROUP BY formatted_date
     ORDER BY sum_max DESC
-    LIMIT 1
-    ;
+	LIMIT 1
 ```
-![Задание 3. Вариант 1](image-2.png)
+
+![Задание 3. Вариант 1](image-3.png)
+
 ```
 # Вариант 2 (но мы временных таблиц еще не проходили)
     WITH MonthlyTotals AS (
         SELECT
-            MONTH(p.payment_date) AS month_number,
+            DATE_FORMAT(p.payment_date, '%Y-%m') AS month_number,
             SUM(p.amount) AS total_amount,
             COUNT(p.rental_id) AS rental_count
         FROM payment p
-        GROUP BY MONTH(p.payment_date)
+        GROUP BY month_number
     )
     SELECT *
     FROM MonthlyTotals mt
     WHERE mt.total_amount = (SELECT MAX(mt.total_amount) FROM MonthlyTotals mt);
 ```
 
-![Задание 3. Вариант 2](image-3.png)
+![Задание 3. Вариант 2](image-6.png)
 
 
 ### Задание 4*
