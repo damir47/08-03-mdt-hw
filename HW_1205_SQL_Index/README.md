@@ -59,6 +59,7 @@ WHERE
 ```
 Анализ:
 
+```
 1) У нас много ресурсов уходит на Join (cost и максимум actual time заметно растут):
         -> Stream results  (cost=10e+6 rows=15.4e+6) (actual time=0.595..1128 rows=642000 loops=1)
         -> Nested loop inner join  (cost=10e+6 rows=15.4e+6) (actual time=0.59..973 rows=642000 loops=1)
@@ -70,23 +71,6 @@ WHERE
 3) Дедупликация так же забирает много времени
         -> Temporary table with deduplication  (cost=0..0 rows=0) (actual time=3403..3403 rows=391 loops=1)
 
-
-```
-SELECT DISTINCT 
-	CONCAT(c.last_name, ' ', c.first_name), 
-	SUM(p.amount) OVER (PARTITION BY c.customer_id, f.title)
-FROM 
-	payment p, 
-	rental r, 
-	customer c, 
-	inventory i, 
-	film f
-WHERE 
-	DATE(p.payment_date) = '2005-07-30' AND 
-	p.payment_date = r.rental_date AND 
-	r.customer_id = c.customer_id AND 
-	i.inventory_id = r.inventory_id
-;
 ```
 
 ## Дополнительные задания (со звёздочкой*)
