@@ -12,8 +12,8 @@ CREATE INDEX year_idx ON books USING btree(year);
 
 CREATE TABLE store
 (
-   store_id SERIAL PRIMARY KEY,
+   store_id SERIAL NOT NULL,
    address_id smallint NOT NULL,
-   last_update timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+   last_update timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
    CONSTRAINT store_id_CHECK CHECK (store_id <=5)
 );

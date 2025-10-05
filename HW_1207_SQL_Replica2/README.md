@@ -48,3 +48,35 @@
 *Пришлите конфиг Docker и SQL скрипт с командами для базы данных*.
 
 #### Решение 3
+
+```
+в разделе Project все конфиги
+
+
+minidb=# \dt
+                List of relations
+ Schema |  Name   |       Type        |  Owner   
+--------+---------+-------------------+----------
+ public | users   | partitioned table | postgres
+ public | users_1 | table             | postgres
+ public | users_2 | table             | postgres
+ public | users_3 | table             | postgres
+(4 rows)
+
+minidb=# \det
+       List of foreign tables
+ Schema |  Table  |     Server      
+--------+---------+-----------------
+ public | books_1 | minidb_1_server
+ public | books_2 | minidb_2_server
+ public | store_1 | minidb_1_server
+ public | store_2 | minidb_2_server
+(4 rows)
+
+minidb=# 
+
+```
+
+![books](image.png)
+![store](image-1.png)
+![username](image-2.png)

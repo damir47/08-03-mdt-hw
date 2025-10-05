@@ -23,7 +23,7 @@ CREATE FOREIGN TABLE store_1
 (
    store_id SERIAL PRIMARY KEY,
    address_id smallint NOT NULL,
-   last_update timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+   last_update timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) SERVER minidb_1_server
   OPTIONS (schema_name 'public', table_name 'store');
 
@@ -50,7 +50,7 @@ CREATE FOREIGN TABLE store_2
 (
    store_id SERIAL PRIMARY KEY,
    address_id smallint NOT NULL,
-   last_update timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+   last_update timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) SERVER minidb_2_server
   OPTIONS (schema_name 'public', table_name 'store');
 

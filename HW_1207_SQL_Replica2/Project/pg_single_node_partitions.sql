@@ -1,6 +1,6 @@
 CREATE TABLE users (
     id uuid PRIMARY KEY,
-    user character varying NOT NULL,
+    username character varying NOT NULL,
     passwd character varying NOT NULL
 ) PARTITION BY HASH (id);
 
@@ -17,7 +17,7 @@ CREATE TABLE users_3 PARTITION OF users
     FOR VALUES WITH (MODULUS 3, REMAINDER 2);
 
 
-INSERT INTO users (id, user, passwd) VALUES
+INSERT INTO users (id, username, passwd) VALUES
     (gen_random_uuid(), 'user1', 'password1'),
     (gen_random_uuid(), 'user2', 'password2'),
     (gen_random_uuid(), 'user3', 'password3'),
