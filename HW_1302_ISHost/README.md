@@ -28,3 +28,16 @@
 как-то так...
 ```
 ![apparmor](image-2.png)
+
+```
+ser@vm-nix-ubnt23:~$ sudo apt remove --purge apparmor
+Reading package lists... Done
+Building dependency tree... Done
+...
+Purging configuration files for firefox (1:1snap1-0ubuntu2) ...
+Purging configuration files for apparmor (3.0.4-2ubuntu2.4) ...
+Purging configuration files for apparmor-utils (3.0.4-2ubuntu2.4) ...
+user@vm-nix-ubnt23:~$ sudo apparmor_status
+sudo: apparmor_status: command not found
+
+```
