@@ -67,9 +67,6 @@ https://docs.google.com/document/d/1z4TAsnnGXQxL3w6Io88tGUfwX3aQeX8Ca4ZA9KDXqUc/
 - Миниахметов Дамир. Git
 https://docs.google.com/document/d/1Vdmzng-Z71FqnbHnbZoGmpvVXx6Q6rWuy0COGLFvX10/edit?usp=sharing
 
-- Миниахметов Дамир. Подъём инфраструктуры в Yandex Cloud
-https://docs.google.com/document/d/1y9B52eYpZKy1ahC_YO5OifJElsIRH7pv1bRRi9-DGXg/edit?usp=sharing
-
 - Миниахметов Дамир. Ansible. Часть 2
 https://docs.google.com/document/d/1Mj7BOPgH8VOvhzQ-VM9tSJ4eTB3QjEUEOilZVdv7Pfc/edit?usp=sharing
 
@@ -87,6 +84,9 @@ https://docs.google.com/document/d/1cZ97vW_9G-rBrd8QyjrMBadCFh8zfQ51C0E3Kq_CgPQ/
 
 - Миниахметов Дамир. Terraform Часть 1
 https://docs.google.com/document/d/1MpS56YVRKGtFu_q3_74iS1L3MRblxTweXfyKFu04oHQ/edit?usp=sharing
+
+- Миниахметов Дамир. Подъём инфраструктуры в Yandex Cloud (Terraform 2)
+https://docs.google.com/document/d/1y9B52eYpZKy1ahC_YO5OifJElsIRH7pv1bRRi9-DGXg/edit?usp=sharing
 
 - Миниахметов Дамир. Обзор систем мониторинга
 https://docs.google.com/document/d/1F3eSG-J7BPzNyzsK5eGV2y7ZE-Aq1XKx2H7Vu9ieH-0/edit?usp=sharing
