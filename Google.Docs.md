@@ -95,4 +95,9 @@ https://docs.google.com/document/d/1F3eSG-J7BPzNyzsK5eGV2y7ZE-Aq1XKx2H7Vu9ieH-0/
 https://docs.google.com/document/d/1iaQ8th0dmIXtMnMsAnusIBtcBDPgY7WFjnXkJRinS_k/edit?usp=sharing
 
 
-.
+https://github.com/netology-code/sdvps-homeworks/blob/main/README.md
+
+https://github.com/netology-code/sflt-homeworks/blob/main/1.md
+
+https://github.com/netology-code/sdb-homeworks/blob/main/13-03.md
+
