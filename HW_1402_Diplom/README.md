@@ -6,34 +6,37 @@
 ## Задача
 Ключевая задача — разработать отказоустойчивую инфраструктуру для сайта, включающую мониторинг, сбор логов и резервное копирование основных данных. Инфраструктура должна размещаться в [Yandex Cloud](https://cloud.yandex.com/) и отвечать минимальным стандартам безопасности: запрещается выкладывать токен от облака в git. Используйте [инструкцию](https://cloud.yandex.ru/docs/tutorials/infrastructure-management/terraform-quickstart#get-credentials).
 
-**Перед началом работы над дипломным заданием изучите [Инструкция по экономии облачных ресурсов](https://github.com/netology-code/devops-materials/blob/master/cloudwork.MD).**
-
-## Инфраструктура
-Для развёртки инфраструктуры используйте Terraform и Ansible.  
-
-Не используйте для ansible inventory ip-адреса! Вместо этого используйте fqdn имена виртуальных машин в зоне ".ru-central1.internal". Пример: example.ru-central1.internal  - для этого достаточно при создании ВМ указать name=example, hostname=examle !! 
-
-Важно: используйте по-возможности **минимальные конфигурации ВМ**:2 ядра 20% Intel ice lake, 2-4Гб памяти, 10hdd, прерываемая. 
-
-**Так как прерываемая ВМ проработает не больше 24ч, перед сдачей работы на проверку дипломному руководителю сделайте ваши ВМ постоянно работающими.**
-
-Ознакомьтесь со всеми пунктами из этой секции, не беритесь сразу выполнять задание, не дочитав до конца. Пункты взаимосвязаны и могут влиять друг на друга.
-
 ### Сайт
 Создайте две ВМ в разных зонах, установите на них сервер nginx, если его там нет. ОС и содержимое ВМ должно быть идентичным, это будут наши веб-сервера.
 
-Используйте набор статичных файлов для сайта. Можно переиспользовать сайт из домашнего задания.
-
+```
+Файлы конфигурации:
+providers.tf - Подключение к провайдеру
+main.tf - создание виртуальных машин, target group, backend group, http router, ALB
+network.tf - сети и подсети
+security_group.tf - правила межсетевого экранирования
+.gitignore - добавлен cloud-init.yml, где описаны параметры авторизации на VM
+```
 Виртуальные машины не должны обладать внешним Ip-адресом, те находится во внутренней сети. Доступ к ВМ по ssh через бастион-сервер. Доступ к web-порту ВМ через балансировщик yandex cloud.
+![Результат работы terraform. Список IP-адресов (ошибку с elk поправил)](images/image-tf.png)
+![Виртуальные машины в YC](images/imageyc-vm.png)
 
 Настройка балансировщика:
 1. Создайте [Target Group](https://cloud.yandex.com/docs/application-load-balancer/concepts/target-group), включите в неё две созданных ВМ.
+![Target Group](images/image-tg.png)
+
 2. Создайте [Backend Group](https://cloud.yandex.com/docs/application-load-balancer/concepts/backend-group), настройте backends на target group, ранее созданную. Настройте healthcheck на корень (/) и порт 80, протокол HTTP.
+![Backend Group](images/image-back-group.png)
+
 3. Создайте [HTTP router](https://cloud.yandex.com/docs/application-load-balancer/concepts/http-router). Путь укажите — /, backend group — созданную ранее.
+![HTTP router](images/image-http-router.png)
+
 4. Создайте [Application load balancer](https://cloud.yandex.com/en/docs/application-load-balancer/) для распределения трафика на веб-сервера, созданные ранее. Укажите HTTP router, созданный ранее, задайте listener тип auto, порт 80.
+![Application TB](images/image-alb.png)
 
 Протестируйте сайт
 `curl -v <публичный IP балансера>:80` 
+![curl -v external_ip_alb](images/image-curl.png)
 
 ### Мониторинг
 Создайте ВМ, разверните на ней Zabbix. На каждую ВМ установите Zabbix Agent, настройте агенты на отправление метрик в Zabbix. 

@@ -345,5 +345,5 @@ output "external_ip_address_kib-1" {
 }
 
 output "internal_ip_address_elk_01" {
-  value = yandex_compute_instance.elk.network_interface.0.nat_ip_address
+  value = yandex_compute_instance.elk.network_interface.0.ip_address
 }
