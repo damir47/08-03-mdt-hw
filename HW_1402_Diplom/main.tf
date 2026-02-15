@@ -314,26 +314,33 @@ resource "yandex_compute_instance" "bastion" {
 # Print IP address 
 
 output "internal_ip_address_web_01" {
-  value = yandex_compute_instance.web01.network_interface.0.nat_ip_address
+  value = yandex_compute_instance.web01.network_interface.0.ip_address
 }
-
 output "internal_ip_address_web_02" {
-  value = yandex_compute_instance.web02.network_interface.0.nat_ip_address
+  value = yandex_compute_instance.web02.network_interface.0.ip_address
+}
+output "external_ip_address_web" {
+  value = yandex_alb_load_balancer.alb-web.listener[0].endpoint[0].address[0].external_ipv4_address[0].address
 }
 
 output "internal_ip_address_zbx_01" {
-  value = yandex_compute_instance.zabbix.network_interface.0.nat_ip_address
+  value = yandex_compute_instance.zabbix.network_interface.0.ip_address
 }
-
 output "external_ip_address_zbx_01" {
   value = yandex_compute_instance.zabbix.network_interface.0.nat_ip_address
 }
 
 output "internal_ip_address_bst_01" {
+  value = yandex_compute_instance.bastion.network_interface.0.ip_address
+}
+output "external_ip_address_bst_01" {
   value = yandex_compute_instance.bastion.network_interface.0.nat_ip_address
 }
 
 output "internal_ip_address_kib-1" {
+  value = yandex_compute_instance.kib.network_interface.0.ip_address
+}
+output "external_ip_address_kib-1" {
   value = yandex_compute_instance.kib.network_interface.0.nat_ip_address
 }
 

@@ -47,7 +47,7 @@ resource "yandex_vpc_security_group" "private-sg" {
   ingress {
     protocol       = "ANY"
     description    = "connect all internal subnets"
-    v4_cidr_blocks = ["192.168.10.0/24","192.168.20.0/24","192.168.50.0/24"]
+    v4_cidr_blocks = ["10.0.1.0/24","10.0.2.0/24","10.0.3.0/24"]
     from_port      = 0
     to_port        = 65535
   }
