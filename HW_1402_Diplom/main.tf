@@ -3,6 +3,10 @@ data "yandex_compute_image" "ubuntu_2404_lts" {
   family = "ubuntu-2404-lts-oslogin"
 }
 
+resource "yandex_vpc_network" "network-1" {
+  name = "network1"
+}
+
 ### Server vm-yc-web01 
 
 resource "yandex_compute_instance" "web01" {
@@ -80,11 +84,11 @@ resource "yandex_alb_target_group" "tg-web" {
   name = "tg-web"
 
   target {
-    subnet_id = "${yandex_vpc_subnet.subnet-private1.id}"
+    subnet_id = "${yandex_vpc_subnet.subnet-private-web1.id}"
     ip_address = "${yandex_compute_instance.web01.network_interface.0.ip_address}"
   }
   target {
-    subnet_id = "${yandex_vpc_subnet.subnet-private2.id}"
+    subnet_id = "${yandex_vpc_subnet.subnet-private-web2.id}"
     ip_address = "${yandex_compute_instance.web02.network_interface.0.ip_address}"
   }
 }
