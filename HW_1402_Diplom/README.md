@@ -19,7 +19,7 @@ security_group.tf - правила межсетевого экранирован
 ```
 Виртуальные машины не должны обладать внешним Ip-адресом, те находится во внутренней сети. Доступ к ВМ по ssh через бастион-сервер. Доступ к web-порту ВМ через балансировщик yandex cloud.
 ![Результат работы terraform. Список созданных серверов и адреса](images/image-tf.png)
-![Виртуальные машины в YC](images/imageyc-vm.png)
+
 ```
 hosts.tpl  - шаблон для inventory
 hosts.tf   - генерация inventory 
@@ -67,6 +67,12 @@ elk
 ```
 
 ![ssh -J user@62.84.115.124 user@vm-yc-elk01.ru-central1.internal -i ~/.ssh/ansible](images/image-tf.png)
+
+Что мы видим в yandex cloud:
+![Виртуальные машины в YC](images/imageyc-vm.png)
+![Список подсетей в YC](images/image-subnet.png)
+![Список групп безопасности сети](images/image-net-sg.png)
+![Bastion SG](images/image-net-bastion-sg.png)
 
 Настройка балансировщика:
 1. Создайте [Target Group](https://cloud.yandex.com/docs/application-load-balancer/concepts/target-group), включите в неё две созданных ВМ.
