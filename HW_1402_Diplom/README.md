@@ -66,7 +66,7 @@ elk
 
 ```
 
-![ssh -J user@62.84.115.124 user@vm-yc-elk01.ru-central1.internal -i ~/.ssh/ansible](images/image-tf.png)
+![ssh -J user@62.84.115.124 user@vm-yc-elk01.ru-central1.internal -i ~/.ssh/ansible](images/image-test-ssh.png)
 
 Что мы видим в yandex cloud:
 ![Виртуальные машины в YC](images/imageyc-vm.png)
