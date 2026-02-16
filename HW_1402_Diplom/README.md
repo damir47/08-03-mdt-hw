@@ -18,8 +18,55 @@ security_group.tf - правила межсетевого экранирован
 .gitignore - добавлен cloud-init.yml, где описаны параметры авторизации на VM
 ```
 Виртуальные машины не должны обладать внешним Ip-адресом, те находится во внутренней сети. Доступ к ВМ по ssh через бастион-сервер. Доступ к web-порту ВМ через балансировщик yandex cloud.
-![Результат работы terraform. Список IP-адресов (ошибку с elk поправил)](images/image-tf.png)
+![Результат работы terraform. Список созданных серверов и адреса](images/image-tf.png)
 ![Виртуальные машины в YC](images/imageyc-vm.png)
+```
+hosts.tpl  - шаблон для inventory
+hosts.tf   - генерация inventory 
+outputs.tf - вывод информации после создания
+ansible/ansible.cfg - настройки ansible
+ansible/hosts.cfg - генерируется terraform, содержит реальные ip и fqdn
+```
+Содержимое hosts.cfg 
+```
+ser@vm-nix-ubnt09:~/terraform/diplom/ansible$ cat hosts.cfg 
+[all:vars]
+ansible_user=user
+ansible_ssh_private_key_file=~/.ssh/ansible
+ansible_ssh_common_args="-o ProxyCommand=\"ssh -q user@62.84.115.124 -i ~/.ssh/ansible -W %h:%p\""
+
+[bastion]
+bastion ansible_host=62.84.115.124
+
+[nginx]
+web01 ansible_host=vm-yc-web01.ru-central1.internal
+web02 ansible_host=vm-yc-web02.ru-central1.internal
+
+[zabbix]
+zabbix ansible_host=vm-yc-zbx01.ru-central1.internal
+
+[kibana]
+kibana ansible_host=vm-yc-kib01.ru-central1.internal
+
+[elastic]
+elastic ansible_host=vm-yc-elk01.ru-central1.internal
+
+[web:children]
+nginx
+
+[elk:children]
+elastic
+kibana
+
+[all:children]
+bastion
+nginx
+zabbix
+elk
+
+```
+
+![ssh -J user@62.84.115.124 user@vm-yc-elk01.ru-central1.internal -i ~/.ssh/ansible](images/image-tf.png)
 
 Настройка балансировщика:
 1. Создайте [Target Group](https://cloud.yandex.com/docs/application-load-balancer/concepts/target-group), включите в неё две созданных ВМ.
