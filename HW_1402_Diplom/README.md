@@ -96,6 +96,33 @@ elk
 
 Настройте дешборды с отображением метрик, минимальный набор — по принципу USE (Utilization, Saturation, Errors) для CPU, RAM, диски, сеть, http запросов к веб-серверам. Добавьте необходимые tresholds на соответствующие графики.
 
+```
+ansible/
+├── site.yml 
+├── zabbix-server.yml - Установка и настройка  сервера Zabbix
+├── zabbix-agents.yml - Установка и настройка агентов Zabbix
+├── install-postgresql.yml - Установка и настройка PGSQL на сервере Zabbix
+├── vault/
+│   └── vault.yml - Хранение секретов
+└── templates/
+    └── zabbix_agentd.conf.j2 - Конфигурация агентов Zabbix
+```
+
+```
+После выполнения основных скриптов terraform 
+1) Создали хранилище секретов
+2) Установили на сервер Zabbix PGSQL
+cd ansible
+ansible-playbook -i hosts.cfg install-postgresql.yml --vault-password-file .vault_pass
+3) Установили Zabbix Server 
+ansible-playbook -i hosts.cfg zabbix-server.yml --vault-password-file .vault_pass
+4) Установили Zabbix Agents
+ansible-playbook -i hosts.cfg zabbix-agents.yml --vault-password-file .vault_pass
+```
+![Install Zabbix PG](images/image-zbx-install-pg.png)
+![Install Zabbix Server](images/image-zbx-server.png)
+![Install Zabbix Agent](images/image-zbx-agent.png)
+
 ### Логи
 Cоздайте ВМ, разверните на ней Elasticsearch. Установите filebeat в ВМ к веб-серверам, настройте на отправку access.log, error.log nginx в Elasticsearch.
 

@@ -1,0 +1,3 @@
+- import_playbook: install-postgresql.yml
+- import_playbook: zabbix-server.yml
+- import_playbook: zabbix-agents.yml

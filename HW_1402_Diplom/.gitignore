@@ -1,1 +1,2 @@
 cloud-init.yml
+/ansible/vars/vault.yml
