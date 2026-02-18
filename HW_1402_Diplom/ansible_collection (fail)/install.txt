@@ -1,0 +1,15 @@
+
+cd ansible
+ansible-galaxy collection install -r requirements.yml
+
+
+Из-за РКН ничего не заработало и пришлось скачивать вручную.
+
+cd ~/terraform/diplom/ansible
+mkdir -p collections
+wget https://galaxy.ansible.com/download/community-zabbix-3.2.0.tar.gz -O collections/community-zabbix-3.2.0.tar.gz
+wget https://galaxy.ansible.com/download/community-postgresql-3.6.0.tar.gz -O collections/community-postgresql-3.6.0.tar.gz
+wget https://galaxy.ansible.com/download/community-general-8.5.0.tar.gz -O collections/community-general-8.5.0.tar.gz
+ansible-galaxy collection install collections/community-zabbix-3.2.0.tar.gz
+ansible-galaxy collection install collections/community-postgresql-3.6.0.tar.gz
+ansible-galaxy collection install collections/community-general-8.5.0.tar.gz

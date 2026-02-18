@@ -1,0 +1,53 @@
+- name: "Install Zabbix Agents with Collection"
+  hosts: all:!bastion
+  become: yes
+  gather_facts: yes
+  serial: 5
+  vars_files:
+    - vault/vault.yml
+
+  tasks:
+    - name: "Add Zabbix repository"
+      apt:
+        deb: "https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.0-1+ubuntu24.04_all.deb"
+        state: present
+
+    - name: "Install Zabbix Agent"
+      apt:
+        name: zabbix-agent
+        state: present
+        update_cache: yes
+
+    - name: "Get Zabbix server IP"
+      set_fact:
+        zabbix_server_fqdn: "{{ hostvars['zabbix']['ansible_fqdn'] }}"
+      run_once: true
+
+    - name: "Configure Zabbix Agent"
+      community.zabbix.zabbix_agent:
+        server: "{{ zabbix_server_fqdn }}"
+        serveractive: "{{ zabbix_server_fqdn }}"
+        hostname: "{{ ansible_hostname }}"
+        listenport: 10050
+        timeout: 30
+        state: present
+      notify: restart zabbix-agent
+
+    - name: "Start Zabbix Agent"
+      systemd:
+        name: zabbix-agent
+        state: started
+        enabled: yes
+
+    - name: "Wait for agent to be ready"
+      wait_for:
+        port: 10050
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 5
+        timeout: 30
+
+  handlers:
+    - name: restart zabbix-agent
+      systemd:
+        name: zabbix-agent
+        state: restarted

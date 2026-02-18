@@ -98,14 +98,18 @@ elk
 
 ```
 ansible/
-├── site.yml 
-├── zabbix-server.yml - Установка и настройка  сервера Zabbix
-├── zabbix-agents.yml - Установка и настройка агентов Zabbix
-├── install-postgresql.yml - Установка и настройка PGSQL на сервере Zabbix
+├── site.yml                    - Запустить все Playbook
+├── ansible.cfg                 - Конфигурация Ansible
+├── hosts.cfg                   - Сгенерированный terraform inventory
+├── install-postgresql.yml      - Установка и настройка PostgreSQL на сервер Zabbix
+├── zabbix-server.yml           - Установка и настройка  сервера Zabbix
+├── zabbix-agents.yml           - Установка и настройка агентов Zabbix
+├── requirements.yml            - Коллекции Ansible Zabbix
 ├── vault/
-│   └── vault.yml - Хранение секретов
+│   └── vault.yml               - Хранение секретов
 └── templates/
-    └── zabbix_agentd.conf.j2 - Конфигурация агентов Zabbix
+    ├── zabbix_agentd.conf.j2   - Конфигурация агентов Zabbix
+    └── zabbix.conf.php.j2      - Конфигурация сервера Zabbix
 ```
 
 ```
@@ -119,9 +123,7 @@ ansible-playbook -i hosts.cfg zabbix-server.yml --vault-password-file .vault_pas
 4) Установили Zabbix Agents
 ansible-playbook -i hosts.cfg zabbix-agents.yml --vault-password-file .vault_pass
 ```
-![Install Zabbix PG](images/image-zbx-install-pg.png)
-![Install Zabbix Server](images/image-zbx-server.png)
-![Install Zabbix Agent](images/image-zbx-agent.png)
+
 
 ### Логи
 Cоздайте ВМ, разверните на ней Elasticsearch. Установите filebeat в ВМ к веб-серверам, настройте на отправку access.log, error.log nginx в Elasticsearch.
