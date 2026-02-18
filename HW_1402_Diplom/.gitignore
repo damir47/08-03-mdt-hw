@@ -1,3 +1,5 @@
 cloud-init.yml
 /ansible/vault/
 /ansible_collection_fail/vault/
+temp.txt
+/!Examples/

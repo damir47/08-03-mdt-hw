@@ -70,9 +70,7 @@ elk
 
 Что мы видим в yandex cloud:
 ![Виртуальные машины в YC](images/imageyc-vm.png)
-![Список подсетей в YC](images/image-subnet.png)
-![Список групп безопасности сети](images/image-net-sg.png)
-![Bastion SG](images/image-net-bastion-sg.png)
+
 
 Настройка балансировщика:
 1. Создайте [Target Group](https://cloud.yandex.com/docs/application-load-balancer/concepts/target-group), включите в неё две созданных ВМ.
@@ -118,12 +116,21 @@ ansible/
 2) Установили на сервер Zabbix PGSQL
 cd ansible
 ansible-playbook -i hosts.cfg install-postgresql.yml --vault-password-file .vault_pass
-3) Установили Zabbix Server 
+3) Установили Zabbix Server. Настройку пользователя вынес в отдельный скрипт.
 ansible-playbook -i hosts.cfg zabbix-server.yml --vault-password-file .vault_pass
+ansible-playbook -i hosts.cfg zabbix-web-setup.yml --vault-password-file .vault_pass
 4) Установили Zabbix Agents
 ansible-playbook -i hosts.cfg zabbix-agents.yml --vault-password-file .vault_pass
 ```
+![Установили на сервер Zabbix PGSQL](images/image-zbx-1-pg.png)
+![Установили Zabbix Server](images/image-zbx-2-srv.png)
+![Установили Zabbix Agents](images/image-zbx-3-agent.png)
 
+```
+Настройка мониторинга
+```
+![Zabbix Console](images/image-zbx-console.png)
+![Zabbix Monitoring Console](images/image-zbx-monitoring.png)
 
 ### Логи
 Cоздайте ВМ, разверните на ней Elasticsearch. Установите filebeat в ВМ к веб-серверам, настройте на отправку access.log, error.log nginx в Elasticsearch.
@@ -138,6 +145,11 @@ Cоздайте ВМ, разверните на ней Elasticsearch. Устан
 Настройте ВМ с публичным адресом, в которой будет открыт только один порт — ssh.  Эта вм будет реализовывать концепцию  [bastion host]( https://cloud.yandex.ru/docs/tutorials/routing/bastion) . Синоним "bastion host" - "Jump host". Подключение  ansible к серверам web и Elasticsearch через данный bastion host можно сделать с помощью  [ProxyCommand](https://docs.ansible.com/ansible/latest/network/user_guide/network_debug_troubleshooting.html#network-delegate-to-vs-proxycommand) . Допускается установка и запуск ansible непосредственно на bastion host.(Этот вариант легче в настройке)
 
 Исходящий доступ в интернет для ВМ внутреннего контура через [NAT-шлюз](https://yandex.cloud/ru/docs/vpc/operations/create-nat-gateway).
+
+![Список подсетей в YC](images/image-subnet.png)
+![Список групп безопасности сети](images/image-net-sg.png)
+![Bastion SG](images/image-net-bastion-sg.png)
+
 
 ### Резервное копирование
 Создайте snapshot дисков всех ВМ. Ограничьте время жизни snaphot в неделю. Сами snaphot настройте на ежедневное копирование.

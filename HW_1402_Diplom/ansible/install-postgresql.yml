@@ -1,4 +1,5 @@
-- name: "Install PG on vm-yc-zbx01"
+---
+- name: "PostgreSQL 16"
   hosts: zabbix
   become: yes
   gather_facts: yes
@@ -6,16 +7,38 @@
     - vault/vault.yml
 
   tasks:
-    - name: "Install PG"
+    - name: "Install dependencies"
       apt:
         name:
-          - postgresql
-          - postgresql-contrib
-          - acl
+          - wget
+          - gnupg
+          - software-properties-common
+          - ca-certificates
         state: present
         update_cache: yes
 
-    - name: "Start PG"
+    - name: "Add PostgreSQL repository key"
+      apt_key:
+        url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+        state: present
+
+    - name: "Add PostgreSQL 16 repository"
+      apt_repository:
+        repo: "deb https://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main"
+        state: present
+        filename: postgresql
+        update_cache: yes
+
+    - name: "Install PostgreSQL 16"
+      apt:
+        name:
+          - postgresql-16
+          - postgresql-contrib-16
+          - acl
+          - python3-psycopg2
+        state: present
+
+    - name: "Start PostgreSQL"
       systemd:
         name: postgresql
         state: started
@@ -25,56 +48,49 @@
       become_user: postgres
       become: yes
       shell: |
-        psql -c "ALTER USER postgres WITH PASSWORD '{{ vault_postgres_password }}';" || echo "Password may already be set"
+        psql -c "ALTER USER postgres WITH PASSWORD '{{ vault_postgres_password }}';"
       register: result
       changed_when: "'ALTER ROLE' in result.stdout"
-      failed_when: false
       no_log: true
 
-    - name: "Get PostgreSQL version"
-      shell: "ls /etc/postgresql/"
-      register: pg_version
-      changed_when: false
+    - name: "Configure PostgreSQL for remote access"
+      block:
+        - name: "Allow local connections with password"
+          lineinfile:
+            path: "/etc/postgresql/16/main/pg_hba.conf"
+            regexp: "^local\\s+all\\s+all"
+            line: "local    all             all                                     md5"
+            backup: yes
 
-    - name: "Show PostgreSQL version"
-      debug:
-        msg: "PostgreSQL version directory: {{ pg_version.stdout }}"
-  
-    - name: "Allow local connections with password"
-      lineinfile:
-        path: "/etc/postgresql/{{ pg_version.stdout }}/main/pg_hba.conf"
-        regexp: "^local\\s+all\\s+all"
-        line: "local    all             all                                     md5"
-        backup: yes
+        - name: "Listen on all interfaces"
+          lineinfile:
+            path: "/etc/postgresql/16/main/postgresql.conf"
+            regexp: "^#?listen_addresses\\s*="
+            line: "listen_addresses = '*'"
+            backup: yes
+
+        - name: "Allow internal network 10.0.0.0/8"
+          lineinfile:
+            path: "/etc/postgresql/16/main/pg_hba.conf"
+            line: "host    all             all             10.0.0.0/8          md5"
+            insertafter: EOF
+            backup: yes
       notify: restart postgresql
 
-    - name: "Allow all interfaces - listen_addresses"
-      lineinfile:
-        path: "/etc/postgresql/{{ pg_version.stdout }}/main/postgresql.conf"
-        regexp: "^#?listen_addresses\\s*="
-        line: "listen_addresses = '*'"
-        backup: yes
-      notify: restart postgresql
+    - name: "Ensure PostgreSQL run directory exists"
+      file:
+        path: /var/run/postgresql
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: '0755'
 
-    - name: "Allow network 10.0.0.0/8"
-      lineinfile:
-        path: "/etc/postgresql/{{ pg_version.stdout }}/main/pg_hba.conf"
-        line: "host    all             all             10.0.0.0/8          md5"
-        insertafter: EOF
-        backup: yes
-      notify: restart postgresql
-
-    - name: "Restart PostgreSQL to apply changes"
+    - name: "Flush handlers"
       meta: flush_handlers
-
-    - name: "Verify PostgreSQL is running"
-      command: "systemctl is-active postgresql"
-      register: pg_status
-      changed_when: false
-      failed_when: pg_status.stdout != "active"
 
   handlers:
     - name: restart postgresql
       systemd:
         name: postgresql
         state: restarted
+        daemon_reload: yes

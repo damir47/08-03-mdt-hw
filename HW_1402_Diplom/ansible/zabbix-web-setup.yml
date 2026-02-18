@@ -1,0 +1,160 @@
+---
+- name: "Zabbix Web Interface"
+  hosts: zabbix
+  become: yes
+  gather_facts: yes
+  vars_files:
+    - vault/vault.yml
+
+  tasks:
+    - name: "Install Apache and PHP"
+      apt:
+        name:
+          - apache2
+          - libapache2-mod-php8.3
+          - php8.3-pgsql
+          - php8.3-mbstring
+          - php8.3-gd
+          - php8.3-xml
+          - php8.3-ldap
+          - zabbix-frontend-php
+          - php8.3-cli
+        state: present
+
+    - name: "Configure PHP timezone"
+      lineinfile:
+        path: /etc/php/8.3/apache2/php.ini
+        regexp: "^;?date.timezone"
+        line: "date.timezone = Europe/Moscow"
+
+    - name: "Enable Apache modules"
+      command: "a2enmod {{ item }}"
+      loop: [rewrite, alias]
+      changed_when: false
+
+    - name: "Check if Zabbix Apache config exists"
+      stat:
+        path: /etc/apache2/conf-available/zabbix.conf
+      register: zabbix_conf_file
+
+    - name: "Create Zabbix Apache config if missing"
+      copy:
+        dest: /etc/apache2/conf-available/zabbix.conf
+        content: |
+          Alias /zabbix /usr/share/zabbix
+          <Directory "/usr/share/zabbix">
+              Options FollowSymLinks
+              AllowOverride None
+              Require all granted
+              php_value max_execution_time 300
+              php_value memory_limit 128M
+              php_value post_max_size 16M
+              php_value upload_max_filesize 2M
+              php_value max_input_time 300
+              php_value max_input_vars 10000
+              php_value date.timezone Europe/Moscow
+          </Directory>
+        owner: root
+        group: root
+        mode: '0644'
+      when: not zabbix_conf_file.stat.exists
+
+    - name: "Enable Zabbix Apache config"
+      command: a2enconf zabbix
+      args:
+        creates: /etc/apache2/conf-enabled/zabbix.conf
+      register: enable_result
+      failed_when: enable_result.rc != 0 and "already enabled" not in enable_result.stderr
+
+    - name: "Create Zabbix web directory"
+      file:
+        path: /etc/zabbix/web
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+
+    - name: "Create Zabbix web config"
+      copy:
+        dest: /etc/zabbix/web/zabbix.conf.php
+        content: |
+          <?php
+          global $DB;
+          $DB['TYPE']     = 'POSTGRESQL';
+          $DB['SERVER']   = 'localhost';
+          $DB['PORT']     = '5432';
+          $DB['DATABASE'] = 'zabbix';
+          $DB['USER']     = 'zabbix';
+          $DB['PASSWORD'] = '{{ vault_zabbix_db_password }}';
+          $ZBX_SERVER      = 'localhost';
+          $ZBX_SERVER_PORT = '10051';
+          $ZBX_SERVER_NAME = 'Zabbix Server';
+        owner: www-data
+        group: www-data
+        mode: '0640'
+      no_log: true
+
+    - name: "Fix sessions directory"
+      file:
+        path: /var/lib/php/sessions
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0733'
+
+    - name: "Check if users table exists"
+      become_user: postgres
+      become: yes
+      shell: |
+        psql -d zabbix -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_name='users';" | tr -d ' '
+      register: users_table_check
+      changed_when: false
+
+    - name: "Generate bcrypt hash from vault password"
+      shell: |
+        php -r 'echo password_hash("{{ vault_zabbix_admin_password }}", PASSWORD_BCRYPT);'
+      register: bcrypt_hash
+      changed_when: false
+      when: users_table_check.stdout | int > 0
+
+    - name: "Debug: show generated hash (safe)"
+      debug:
+        msg: "Generated bcrypt hash for Admin: {{ bcrypt_hash.stdout }}"
+      when: bcrypt_hash is defined and bcrypt_hash.stdout is defined
+      no_log: false
+
+    - name: "Set Zabbix admin password with generated bcrypt"
+      become_user: postgres
+      become: yes
+      shell: |
+        psql -d zabbix -c "UPDATE users SET passwd = '{{ bcrypt_hash.stdout }}', attempt_failed = 0, attempt_clock = 0 WHERE username = 'Admin';"
+      register: admin_pass_set
+      changed_when: admin_pass_set.rc == 0
+      no_log: true
+      when: 
+        - users_table_check.stdout | int > 0
+        - bcrypt_hash.stdout is defined
+
+    - name: "Restart Apache"
+      systemd:
+        name: apache2
+        state: restarted
+        enabled: yes
+
+    - name: "Wait for web interface"
+      wait_for:
+        port: 80
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 5
+        timeout: 60
+
+    - name: "Zabbix Web is ready"
+      debug:
+        msg: |
+          ========================================
+          Zabbix Server is ready!
+          ========================================
+          Web interface: http://{{ ansible_default_ipv4.address }}/zabbix
+          Login: Admin
+          Password: {{ vault_zabbix_admin_password }}
+          ========================================
