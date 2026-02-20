@@ -134,8 +134,21 @@ ansible-playbook -i hosts.cfg zabbix-agents.yml --vault-password-file .vault_pas
 
 ### Логи
 Cоздайте ВМ, разверните на ней Elasticsearch. Установите filebeat в ВМ к веб-серверам, настройте на отправку access.log, error.log nginx в Elasticsearch.
-
 Создайте ВМ, разверните на ней Kibana, сконфигурируйте соединение с Elasticsearch.
+
+```
+ansible/
+├── elasticsearch.yml      # Установка и настройка Elasticsearch на сервере elk
+├── kibana.yml             # Установка и настройка Kibana на сервере kib
+├── filebeat.yml           # Установка Filebeat на web01, web02
+└── vars/
+│   └── elastic.yml        # Переменные для Elastic стека
+├── templates/
+    ├── elasticsearch.yml.j2   # Конфиг Elasticsearch
+    ├── kibana.yml.j2          # Конфиг Kibana
+    ├── filebeat.yml.j2        # Конфиг Filebeat для nginx
+    └── filebeat-nginx.yml.j2  # Конфиг модуля nginx для Filebeat
+```
 
 ### Сеть
 Разверните один VPC. Сервера web, Elasticsearch поместите в приватные подсети. Сервера Zabbix, Kibana, application load balancer определите в публичную подсеть.

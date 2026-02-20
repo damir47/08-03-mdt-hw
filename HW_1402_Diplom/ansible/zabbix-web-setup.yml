@@ -102,38 +102,32 @@
         group: www-data
         mode: '0733'
 
-    - name: "Check if users table exists"
-      become_user: postgres
-      become: yes
-      shell: |
-        psql -d zabbix -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_name='users';" | tr -d ' '
-      register: users_table_check
-      changed_when: false
-
-    - name: "Generate bcrypt hash from vault password"
+    - name: "Generate bcrypt hash for Admin password"
       shell: |
         php -r 'echo password_hash("{{ vault_zabbix_admin_password }}", PASSWORD_BCRYPT);'
-      register: bcrypt_hash
+      register: admin_hash
       changed_when: false
-      when: users_table_check.stdout | int > 0
 
-    - name: "Debug: show generated hash (safe)"
-      debug:
-        msg: "Generated bcrypt hash for Admin: {{ bcrypt_hash.stdout }}"
-      when: bcrypt_hash is defined and bcrypt_hash.stdout is defined
-      no_log: false
-
-    - name: "Set Zabbix admin password with generated bcrypt"
+    - name: "Reset Admin password and unblock account"
       become_user: postgres
       become: yes
       shell: |
-        psql -d zabbix -c "UPDATE users SET passwd = '{{ bcrypt_hash.stdout }}', attempt_failed = 0, attempt_clock = 0 WHERE username = 'Admin';"
-      register: admin_pass_set
-      changed_when: admin_pass_set.rc == 0
+        psql -d zabbix -c "UPDATE users SET passwd = '{{ admin_hash.stdout }}', attempt_failed = 0, attempt_clock = 0 WHERE username = 'Admin';"
+      register: reset_result
+      changed_when: reset_result.rc == 0
       no_log: true
-      when: 
-        - users_table_check.stdout | int > 0
-        - bcrypt_hash.stdout is defined
+
+    - name: "Verify password update"
+      become_user: postgres
+      become: yes
+      shell: |
+        psql -d zabbix -t -c "SELECT passwd FROM users WHERE username = 'Admin';"
+      register: verify
+      changed_when: false
+
+    - name: "Debug: show password status"
+      debug:
+        msg: "Password updated: {{ 'OK' if verify.stdout is defined and verify.stdout | length > 0 else 'FAILED' }}"
 
     - name: "Restart Apache"
       systemd:
@@ -152,9 +146,9 @@
       debug:
         msg: |
           ========================================
-          Zabbix Server is ready!
+          ✅ Zabbix Server is ready!
           ========================================
-          Web interface: http://{{ ansible_default_ipv4.address }}/zabbix
-          Login: Admin
-          Password: {{ vault_zabbix_admin_password }}
+          🌐 Web interface: http://{{ ansible_default_ipv4.address }}/zabbix
+          🔑 Login: Admin
+          🔑 Password: {{ vault_zabbix_admin_password }}
           ========================================

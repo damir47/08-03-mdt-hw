@@ -1,0 +1,19 @@
+# Elasticsearch
+elasticsearch_version: "8.x"
+elasticsearch_cluster_name: "zabbix-cluster"
+elasticsearch_node_name: "elk01"
+elasticsearch_network_host: "0.0.0.0"
+elasticsearch_http_port: 9200
+elasticsearch_heap_size: "2g"
+
+# Kibana
+kibana_version: "8.x"
+kibana_server_host: "0.0.0.0"
+kibana_server_port: 5601
+kibana_elasticsearch_host: "http://vm-yc-elk01.ru-central1.internal:9200"
+
+# Filebeat
+filebeat_version: "8.x"
+filebeat_log_path: "/var/log/nginx/*.log"
+filebeat_tags: ["nginx", "web"]
+filebeat_output_host: "vm-yc-elk01.ru-central1.internal:9200"

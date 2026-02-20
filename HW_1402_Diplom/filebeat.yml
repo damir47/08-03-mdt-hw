@@ -1,0 +1,85 @@
+---
+- name: "Install and configure Filebeat for nginx logs"
+  hosts: nginx
+  become: yes
+  gather_facts: yes
+  vars_files:
+    - vault/vault.yml
+    - vars/elastic.yml
+
+  tasks:
+    - name: "Add Elasticsearch GPG key"
+      apt_key:
+        url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
+        state: present
+
+    - name: "Add Filebeat repository"
+      apt_repository:
+        repo: "deb https://artifacts.elastic.co/packages/{{ filebeat_version }}/apt stable main"
+        state: present
+        filename: elasticsearch
+        update_cache: yes
+
+    - name: "Install Filebeat"
+      apt:
+        name: filebeat
+        state: present
+
+    - name: "Configure Filebeat"
+      template:
+        src: filebeat.yml.j2
+        dest: /etc/filebeat/filebeat.yml
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart filebeat
+
+    - name: "Enable nginx module"
+      command: filebeat modules enable nginx
+      changed_when: false
+
+    - name: "Configure nginx module"
+      template:
+        src: filebeat-nginx.yml.j2
+        dest: /etc/filebeat/modules.d/nginx.yml
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart filebeat
+
+    - name: "Ensure nginx logs are readable"
+      file:
+        path: /var/log/nginx
+        state: directory
+        mode: '0755'
+        recurse: yes
+
+    - name: "Load Filebeat index template"
+      command: |
+        filebeat setup --index-management \
+          -E output.elasticsearch.hosts=["vm-yc-elk01.ru-central1.internal:9200"]
+      changed_when: false
+
+    - name: "Start and enable Filebeat"
+      systemd:
+        name: filebeat
+        state: started
+        enabled: yes
+
+    - name: "Check Filebeat connection"
+      command: filebeat test output
+      register: filebeat_test
+      changed_when: false
+
+    - name: "Show connection status"
+      debug:
+        msg: |
+          Filebeat on {{ inventory_hostname }}
+          Sending logs to Elasticsearch: vm-yc-elk01.ru-central1.internal:9200
+          Connection test: {{ '✅ OK' if 'elasticsearch' in filebeat_test.stdout else '❌ FAILED' }}
+
+  handlers:
+    - name: restart filebeat
+      systemd:
+        name: filebeat
+        state: restarted

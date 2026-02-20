@@ -1,0 +1,22 @@
+filebeat.inputs:
+- type: filestream
+  enabled: true
+  paths:
+    - {{ filebeat_log_path }}
+  tags: {{ filebeat_tags }}
+
+filebeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+
+output.elasticsearch:
+  hosts: ["vm-yc-elk01.ru-central1.internal:9200"]
+  protocol: "http"
+  enabled: true
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
