@@ -10,9 +10,12 @@ filebeat.config.modules:
   reload.enabled: false
 
 output.elasticsearch:
-  hosts: ["vm-yc-elk01.ru-central1.internal:9200"]
+  hosts: ["10.0.3.20:9200"]
   protocol: "http"
   enabled: true
+
+setup.kibana:
+  host: "http://vm-yc-kib01.ru-central1.internal:5601"
 
 logging.level: info
 logging.to_files: true

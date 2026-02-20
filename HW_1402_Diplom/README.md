@@ -162,6 +162,10 @@ ansible-playbook -i hosts.cfg filebeat.yml --vault-password-file .vault_pass
 ```
 
 ![Установлен ELK](images/image-elk-elkinstall.png)
+![Установлена Kibana](images/image-elk-kib.png)
+![Установлен Filebeat](images/image-elk-fb.png)
+![Filebeat работает](images/image-elk-fb2.png)
+
 
 ### Сеть
 Разверните один VPC. Сервера web, Elasticsearch поместите в приватные подсети. Сервера Zabbix, Kibana, application load balancer определите в публичную подсеть.
@@ -179,7 +183,8 @@ ansible-playbook -i hosts.cfg filebeat.yml --vault-password-file .vault_pass
 
 ### Резервное копирование
 Создайте snapshot дисков всех ВМ. Ограничьте время жизни snaphot в неделю. Сами snaphot настройте на ежедневное копирование.
-
+![Terraform Apply](images/image-snap-terraform.png)
+![РАсписание snapshot в YC](images/image-snap-yc.png)
 ### Дополнительно
 Не входит в минимальные требования. 
 
