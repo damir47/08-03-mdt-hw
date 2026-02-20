@@ -1,5 +1,6 @@
 # Elasticsearch
 elasticsearch_version: "8.x"
+elasticsearch_package_url: "https://mirror.yandex.ru/mirrors/elastic/8.x/apt/pool/main/e/elasticsearch/elasticsearch-8.17.4-amd64.deb"
 elasticsearch_cluster_name: "zabbix-cluster"
 elasticsearch_node_name: "elk01"
 elasticsearch_network_host: "0.0.0.0"

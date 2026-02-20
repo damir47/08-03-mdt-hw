@@ -150,6 +150,19 @@ ansible/
     └── filebeat-nginx.yml.j2  # Конфиг модуля nginx для Filebeat
 ```
 
+```
+# 1. Elasticsearch
+ansible-playbook -i hosts.cfg elasticsearch.yml --vault-password-file .vault_pass
+
+# 2. Kibana
+ansible-playbook -i hosts.cfg kibana.yml --vault-password-file .vault_pass
+
+# 3. Filebeat на web01 и web02
+ansible-playbook -i hosts.cfg filebeat.yml --vault-password-file .vault_pass
+```
+
+![Установлен ELK](images/image-elk-elkinstall.png)
+
 ### Сеть
 Разверните один VPC. Сервера web, Elasticsearch поместите в приватные подсети. Сервера Zabbix, Kibana, application load balancer определите в публичную подсеть.
 

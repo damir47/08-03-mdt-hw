@@ -8,14 +8,26 @@
     - vars/elastic.yml
 
   tasks:
-    - name: "Add Elasticsearch GPG key"
-      apt_key:
-        url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
+    - name: "Install dependencies"
+      apt:
+        name:
+          - wget
+          - curl
+          - gnupg
+          - apt-transport-https
+          - openjdk-17-jre-headless
         state: present
+        update_cache: yes
 
-    - name: "Add Elasticsearch repository"
+    - name: "Set Java environment"
+      lineinfile:
+        path: /etc/environment
+        line: "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64"
+        create: yes
+
+    - name: "Add Elasticsearch repository (Yandex mirror)"
       apt_repository:
-        repo: "deb https://artifacts.elastic.co/packages/{{ elasticsearch_version }}/apt stable main"
+        repo: "deb [trusted=yes] https://mirror.yandex.ru/mirrors/elastic/8/ stable main"
         state: present
         filename: elasticsearch
         update_cache: yes
@@ -25,26 +37,67 @@
         name: elasticsearch
         state: present
 
-    - name: "Configure Elasticsearch"
-      template:
-        src: elasticsearch.yml.j2
+    - name: "Stop Elasticsearch if running"
+      systemd:
+        name: elasticsearch
+        state: stopped
+      ignore_errors: yes
+
+    - name: "Increase vm.max_map_count"
+      sysctl:
+        name: vm.max_map_count
+        value: '262144'
+        state: present
+        reload: yes
+
+    - name: "Configure Elasticsearch (SSL disabled)"
+      copy:
         dest: /etc/elasticsearch/elasticsearch.yml
+        content: |
+          cluster.name: zabbix-cluster
+          node.name: elk01
+          path.data: /var/lib/elasticsearch
+          path.logs: /var/log/elasticsearch
+          network.host: 0.0.0.0
+          http.port: 9200
+          discovery.type: single-node
+          
+          # DISABLE ALL SECURITY FOR TEST ENVIRONMENT
+          xpack.security.enabled: false
+          xpack.security.transport.ssl.enabled: false
+          xpack.security.http.ssl.enabled: false
         owner: root
         group: elasticsearch
         mode: '0640'
-      notify: restart elasticsearch
 
-    - name: "Configure JVM heap size"
-      lineinfile:
-        path: /etc/elasticsearch/jvm.options.d/heap.options
-        line: "{{ item }}"
-        create: yes
+    - name: "Configure JVM heap (minimal for small server)"
+      copy:
+        dest: /etc/elasticsearch/jvm.options.d/heap.options
+        content: |
+          -Xms1g
+          -Xmx1g
+        owner: root
+        group: elasticsearch
+        mode: '0644'
+
+    - name: "Fix all permissions"
+      file:
+        path: "{{ item.path }}"
+        state: directory
+        owner: elasticsearch
+        group: elasticsearch
+        mode: '{{ item.mode }}'
+        recurse: yes
       loop:
-        - "-Xms{{ elasticsearch_heap_size }}"
-        - "-Xmx{{ elasticsearch_heap_size }}"
-      notify: restart elasticsearch
+        - { path: /var/lib/elasticsearch, mode: '0755' }
+        - { path: /var/log/elasticsearch, mode: '0755' }
+        - { path: /etc/elasticsearch, mode: '0750' }
 
-    - name: "Start and enable Elasticsearch"
+    - name: "Reload systemd"
+      systemd:
+        daemon_reload: yes
+
+    - name: "Start Elasticsearch"
       systemd:
         name: elasticsearch
         state: started
@@ -54,28 +107,27 @@
       wait_for:
         port: 9200
         host: "{{ ansible_default_ipv4.address }}"
-        delay: 10
-        timeout: 60
+        delay: 15
+        timeout: 120
+      register: wait_result
 
     - name: "Verify Elasticsearch is running"
       uri:
         url: "http://localhost:9200"
         method: GET
       register: es_status
-      retries: 5
-      delay: 5
+      when: wait_result is success
 
-    - name: "Show Elasticsearch info"
+    - name: "Final status"
       debug:
         msg: |
-          Elasticsearch is running
-          Hostname: {{ ansible_hostname }}
-          Internal DNS: {{ ansible_hostname }}.ru-central1.internal
+          ========================================
+             Elasticsearch is running
+          ========================================
           Version: {{ es_status.json.version.number }}
-          Access from Kibana: http://vm-yc-elk01.ru-central1.internal:9200
-
-  handlers:
-    - name: restart elasticsearch
-      systemd:
-        name: elasticsearch
-        state: restarted
+          Cluster: {{ es_status.json.cluster_name }}
+          
+           Internal access:
+               http://vm-yc-elk01.ru-central1.internal:9200
+          ========================================
+      when: wait_result is success

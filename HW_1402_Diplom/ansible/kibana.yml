@@ -1,0 +1,124 @@
+---
+- name: "Install and configure Kibana"
+  hosts: kibana
+  become: yes
+  gather_facts: yes
+  vars_files:
+    - vault/vault.yml
+    - vars/elastic.yml
+
+  tasks:
+    - name: "Install dependencies"
+      apt:
+        name:
+          - wget
+          - curl
+          - gnupg
+          - apt-transport-https
+        state: present
+        update_cache: yes
+
+    - name: "Remove ALL Elastic/Kibana repositories"
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/apt/sources.list.d/elasticsearch.list
+        - /etc/apt/sources.list.d/elasticsearch.list.save
+        - /etc/apt/sources.list.d/kibana.list
+        - /etc/apt/sources.list.d/kibana.list.save
+        - /etc/apt/sources.list.d/elastic-8.x.list
+        - /etc/apt/sources.list.d/elastic-8.x.list.save
+      ignore_errors: yes
+
+    - name: "Add Kibana repository (Yandex mirror)"
+      copy:
+        dest: /etc/apt/sources.list.d/elastic-8.x.list
+        content: |
+          deb [trusted=yes] https://mirror.yandex.ru/mirrors/elastic/8/ stable main
+        mode: '0644'
+
+    - name: "Update apt cache"
+      apt:
+        update_cache: yes
+
+    - name: "Install Kibana"
+      apt:
+        name: kibana
+        state: present
+
+    - name: "Configure Kibana"
+      template:
+        src: kibana.yml.j2
+        dest: /etc/kibana/kibana.yml
+        owner: root
+        group: kibana
+        mode: '0640'
+
+    - name: "Create Kibana log directory"
+      file:
+        path: /var/log/kibana
+        state: directory
+        owner: kibana
+        group: kibana
+        mode: '0755'
+
+    - name: "Check Elasticsearch connectivity BEFORE starting Kibana"
+      uri:
+        url: "http://vm-yc-elk01.ru-central1.internal:9200"
+        method: GET
+      register: es_check
+      retries: 10
+      delay: 10
+      until: es_check.status == 200
+      changed_when: false
+
+    - name: "Start and enable Kibana"
+      systemd:
+        name: kibana
+        state: started
+        enabled: yes
+
+    - name: "Wait for Kibana to be ready (long timeout)"
+      wait_for:
+        port: 5601
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 15
+        timeout: 180  # Увеличено до 3 минут
+      register: wait_result
+      ignore_errors: yes
+
+    - name: "Check Kibana logs on failure"
+      shell: |
+        journalctl -u kibana -n 50 --no-pager
+        echo "---"
+        tail -50 /var/log/kibana/kibana.log 2>/dev/null || echo "Log file not found"
+      register: kibana_logs
+      when: wait_result is failed
+
+    - name: "Show Kibana logs"
+      debug:
+        var: kibana_logs.stdout_lines
+      when: wait_result is failed
+
+    - name: "Verify Kibana is running"
+      uri:
+        url: "http://localhost:5601/api/status"
+        method: GET
+      register: kibana_status
+      when: wait_result is success
+
+    - name: "Show Kibana access info"
+      debug:
+        msg: |
+          ========================================
+          {% if wait_result is success %}
+           Kibana is running
+          Internal IP: {{ ansible_default_ipv4.address }}
+           External URL: http://{{ hostvars['kibana']['ansible_default_ipv4']['address'] }}:5601
+          Connected to Elasticsearch: {{ kibana_elasticsearch_host }}
+          {% else %}
+           Kibana failed to start within timeout
+          Check logs above for errors
+          {% endif %}
+          ========================================
