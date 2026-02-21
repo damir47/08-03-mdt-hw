@@ -140,7 +140,12 @@ ansible-playbook -i hosts.cfg zabbix-agents.yml --vault-password-file .vault_pas
 Настройка мониторинга
 ```
 ![Zabbix Console](images/image-zbx-console.png)
+
 ![Zabbix Monitoring Console](images/image-zbx-monitoring.png)
+
+Пересоздавал сервера много раз, последний вариант страницы мониторинга
+
+![Zabbix monitoring console](images/image-zbx-mon2.png)
 
 ### Логи
 Cоздайте ВМ, разверните на ней Elasticsearch. Установите filebeat в ВМ к веб-серверам, настройте на отправку access.log, error.log nginx в Elasticsearch.
