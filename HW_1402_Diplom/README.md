@@ -175,7 +175,7 @@ ansible-playbook -i hosts.cfg filebeat.yml --vault-password-file .vault_pass
 ![Установлена Kibana](images/image-elk-kib.png)
 ![Установлен Filebeat](images/image-elk-fb.png)
 ![Filebeat работает](images/image-elk-fb2.png)
-
+![WEB Интерфейс работает, данные поступают](images/image-elk-web.png)
 
 ### Сеть
 Разверните один VPC. Сервера web, Elasticsearch поместите в приватные подсети. Сервера Zabbix, Kibana, application load balancer определите в публичную подсеть.
