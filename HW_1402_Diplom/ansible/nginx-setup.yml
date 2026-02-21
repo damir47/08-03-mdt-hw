@@ -1,0 +1,44 @@
+---
+- name: "Setup Nginx on web servers"
+  hosts: nginx
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: "Update apt cache"
+      apt:
+        update_cache: yes
+
+    - name: "Install nginx"
+      apt:
+        name: nginx
+        state: present
+
+    - name: "Create custom index.html"
+      copy:
+        dest: /var/www/html/index.html
+        content: |
+          Hello!
+          This is web server: {{ ansible_hostname }}
+          Diplom Project of Miniakhmetov D.T.
+          {{ ansible_date_time.date }}
+        owner: www-data
+        group: www-data
+        mode: '0644'
+
+    - name: "Ensure nginx is running"
+      systemd:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: "Test nginx response"
+      uri:
+        url: http://localhost
+        method: GET
+        status_code: 200
+      register: nginx_test
+
+    - name: "Show nginx status"
+      debug:
+        msg: "Nginx is running and serving custom page"

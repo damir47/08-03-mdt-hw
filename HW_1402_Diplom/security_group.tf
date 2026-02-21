@@ -100,6 +100,20 @@ resource "yandex_vpc_security_group" "load-balancer-sg" {
   }
 
   egress {
+    protocol       = "TCP"
+    description    = "to web01 backend"
+    v4_cidr_blocks = ["10.0.1.0/24"]
+    port           = 80
+  }
+
+  egress {
+    protocol       = "TCP"
+    description    = "to web02 backend"
+    v4_cidr_blocks = ["10.0.2.0/24"]
+    port           = 80
+  }
+
+  egress {
     protocol       = "ANY"
     description    = "allow any outgoing connection"
     v4_cidr_blocks = ["0.0.0.0/0"]

@@ -85,9 +85,17 @@ elk
 4. Создайте [Application load balancer](https://cloud.yandex.com/en/docs/application-load-balancer/) для распределения трафика на веб-сервера, созданные ранее. Укажите HTTP router, созданный ранее, задайте listener тип auto, порт 80.
 ![Application TB](images/image-alb.png)
 
+
 Протестируйте сайт
 `curl -v <публичный IP балансера>:80` 
 ![curl -v external_ip_alb](images/image-curl.png)
+
+Настройка сайта через Ansible:
+```
+ansible-playbook -i hosts.cfg nginx-setup.yml --vault-password-file .vault_pass
+
+```
+![Результат работы скррипта и web-страница](images/image-nginx-config.png)
 
 ### Мониторинг
 Создайте ВМ, разверните на ней Zabbix. На каждую ВМ установите Zabbix Agent, настройте агенты на отправление метрик в Zabbix. 
@@ -101,8 +109,9 @@ ansible/
 ├── hosts.cfg                   - Сгенерированный terraform inventory
 ├── install-postgresql.yml      - Установка и настройка PostgreSQL на сервер Zabbix
 ├── zabbix-server.yml           - Установка и настройка  сервера Zabbix
+├── zabbix-web-setup.yml        - Настройка Web-сервера и пользователя Zabbix
 ├── zabbix-agents.yml           - Установка и настройка агентов Zabbix
-├── requirements.yml            - Коллекции Ansible Zabbix
+├── requirements.yml            - Коллекции Ansible Zabbix (не стал использовать)
 ├── vault/
 │   └── vault.yml               - Хранение секретов
 └── templates/
@@ -119,6 +128,7 @@ ansible-playbook -i hosts.cfg install-postgresql.yml --vault-password-file .vaul
 3) Установили Zabbix Server. Настройку пользователя вынес в отдельный скрипт.
 ansible-playbook -i hosts.cfg zabbix-server.yml --vault-password-file .vault_pass
 ansible-playbook -i hosts.cfg zabbix-web-setup.yml --vault-password-file .vault_pass
+
 4) Установили Zabbix Agents
 ansible-playbook -i hosts.cfg zabbix-agents.yml --vault-password-file .vault_pass
 ```
@@ -151,13 +161,13 @@ ansible/
 ```
 
 ```
-# 1. Elasticsearch
+# 1. Установка Elasticsearch
 ansible-playbook -i hosts.cfg elasticsearch.yml --vault-password-file .vault_pass
 
-# 2. Kibana
+# 2. Установка Kibana
 ansible-playbook -i hosts.cfg kibana.yml --vault-password-file .vault_pass
 
-# 3. Filebeat на web01 и web02
+# 3.0 Установка Filebeat на web01 и web02
 ansible-playbook -i hosts.cfg filebeat.yml --vault-password-file .vault_pass
 ```
 
