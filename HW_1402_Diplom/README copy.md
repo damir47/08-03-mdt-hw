@@ -8,56 +8,11 @@
 
 ---------
 
-# Общая структура проекта
+## Задача
+Ключевая задача — разработать отказоустойчивую инфраструктуру для сайта, включающую мониторинг, сбор логов и резервное копирование основных данных. Инфраструктура должна размещаться в [Yandex Cloud](https://cloud.yandex.com/) и отвечать минимальным стандартам безопасности: запрещается выкладывать токен от облака в git. Используйте [инструкцию](https://cloud.yandex.ru/docs/tutorials/infrastructure-management/terraform-quickstart#get-credentials).
 
-```
-user@vm-nix-ubnt09:~/terraform/diplom$ tree -L 3
-
-├── ansible
-│   ├── ansible.cfg                  - Основной конфигурационный файл Ansible
-│   ├── elasticsearch.yml            - Плейбук для установки и настройки Elasticsearch
-│   ├── filebeat.yml                 - Плейбук для установки и настройки Filebeat на веб-серверах
-│   ├── hosts.cfg                    - Сгенерированный Terraform инвентарный файл для работы Ansible
-│   ├── install-postgresql.yml       - Плейбук для установки и первичной настройки PostgreSQL на сервере Zabbix
-│   ├── kibana.yml                   - Плейбук для установки и настройки Kibana
-│   ├── nginx-setup.yml              - Плейбук для установки Nginx на веб-серверы и создания страницы
-│   ├── site.yml                     - Главный плейбук
-│   ├── templates                    - Каталог конфигурационных файлов
-│   │   ├── elasticsearch.yml.j2     - Шаблон конфигурации для Elasticsearch
-│   │   ├── filebeat-nginx.yml.j2    - Шаблон конфигурации модуля Filebeat для сбора логов Nginx
-│   │   ├── filebeat.yml.j2          - Шаблон конфигурации Filebeat
-│   │   ├── kibana.yml.j2            - Шаблон конфигурации для Kibana
-│   │   ├── zabbix_agentd.conf.j2    - Шаблон конфигурации для Zabbix-агента
-│   │   └── zabbix.conf.php.j2       - Шаблон конфигурационного файла для веб-интерфейса Zabbix
-│   ├── vars                         - Каталог переменных Ansible
-│   │   └── elastic.yml              - Переменные для настройки Elasticsearch, Kibana и Filebeat
-│   ├── vault                        - Каталог для хранения секретов
-│   │   ├── vault.yml                - Зашифрованный файл с паролями
-│   ├── zabbix-agents.yml            - Плейбук для установки и настройки Zabbix-агентов
-│   ├── zabbix-server.yml            - Плейбук для первоначальной установки Zabbix-сервера
-│   └── zabbix-web-setup.yml         - Плейбук для настройки веб-интерфейса Zabbix-сервера и установки пароля администратора
-├── cloud-init-nginx.yml             - Cloud-init конфигурация для веб-серверов
-├── cloud-init.yml                   - Cloud-init конфигурация для всех серверов
-├── hosts.tf                         - Terraform-файл, генерирующий ansible/hosts.cfg из шаблона hosts.tpl
-├── hosts.tpl                        - Шаблон инвентарного файла Ansible
-├── main.tf                          - Основной файл конфигурации Terraform
-├── network.tf                       - Terraform-файл, описывающий сетевую инфраструктуру
-├── outputs.tf                       - Terraform-файл, определяющий выходные переменные
-├── providers.tf                     - Terraform-файл для настройки провайдеров
-├── security_group.tf                - Terraform-файл с описанием всех групп безопасности и правил МСЭ
-├── snapshot.tf                      - Terraform-файл для настройки расписания создания snapshot's
-├── variables.tf                     - Terraform-файл с объявлением переменных
-└── .gitignore                       - Файл со списком исключений для публикации в Git
-
-Содержимое gitignore:
-- cloud-init.yml 
-- cloud-init-nginx.yml
-- /ansible/vault/
-
-```
-
-
-# Скрипты Terraform: Создание серверного окружения в Яндекс облаке.
+### Сайт
+Создайте две ВМ в разных зонах, установите на них сервер nginx, если его там нет. ОС и содержимое ВМ должно быть идентичным, это будут наши веб-сервера.
 
 ```
 Файлы конфигурации:
@@ -77,9 +32,9 @@ outputs.tf - вывод информации после создания
 ansible/ansible.cfg - настройки ansible
 ansible/hosts.cfg - генерируется terraform, содержит реальные ip и fqdn
 ```
-Содержимое hosts.cfg
+Содержимое hosts.cfg 
 ```
-ser@vm-nix-ubnt09:~/terraform/diplom/ansible$ cat hosts.cfg
+ser@vm-nix-ubnt09:~/terraform/diplom/ansible$ cat hosts.cfg 
 [all:vars]
 ansible_user=user
 ansible_ssh_private_key_file=~/.ssh/ansible

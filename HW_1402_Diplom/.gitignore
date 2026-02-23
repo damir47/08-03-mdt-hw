@@ -1,4 +1,5 @@
 cloud-init.yml
+cloud-init-nginx.yml
 /ansible/vault/
 /ansible_collection_fail/vault/
 temp.txt
