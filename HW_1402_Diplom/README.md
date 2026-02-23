@@ -60,23 +60,129 @@ user@vm-nix-ubnt09:~/terraform/diplom$ tree -L 3
 # Скрипты Terraform: Создание серверного окружения в Яндекс облаке.
 
 ```
-Файлы конфигурации:
-providers.tf - Подключение к провайдеру
-main.tf - создание виртуальных машин, target group, backend group, http router, ALB
-network.tf - сети и подсети
-security_group.tf - правила межсетевого экранирования
-.gitignore - добавлен cloud-init.yml, где описаны параметры авторизации на VM
+├── ansible
+│   ├── ansible.cfg                  - Основной конфигурационный файл Ansible
+│   ├── hosts.cfg                    - Сгенерированный Terraform инвентарный файл для работы Ansible
+│   ├── nginx-setup.yml              - Плейбук для установки Nginx на веб-серверы и создания страницы
+├── cloud-init-nginx.yml             - Cloud-init конфигурация для веб-серверов
+├── cloud-init.yml                   - Cloud-init конфигурация для всех серверов
+├── hosts.tf                         - Terraform-файл, генерирующий ansible/hosts.cfg из шаблона hosts.tpl
+├── hosts.tpl                        - Шаблон инвентарного файла Ansible
+├── main.tf                          - Основной файл конфигурации Terraform
+├── network.tf                       - Terraform-файл, описывающий сетевую инфраструктуру
+├── outputs.tf                       - Terraform-файл, определяющий выходные переменные
+├── providers.tf                     - Terraform-файл для настройки провайдеров
+├── security_group.tf                - Terraform-файл с описанием всех групп безопасности и правил МСЭ
+├── variables.tf                     - Terraform-файл с объявлением переменных
+└── .gitignore                       - Файл со списком исключений для публикации в Git
 ```
+
+```
+Содержимое cloud-init.yml:
+#cloud-config
+users:
+  - name: user
+    groups: sudo
+    shell: /bin/bash
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    ssh_authorized_keys:                        - Тут указан SSH ключ
+ 
+package_update: true
+package_upgrade: true
+
+packages:
+  - python3
+  - python3-pip
+  - python3-venv
+# - nginx                                       - Дополнительная строка в файле cloud-init-nginx.yml
+
+runcmd:
+  - chmod 700 /home/user/.ssh
+  - chmod 600 /home/user/.ssh/authorized_keys
+  - chown -R user:user /home/user/.ssh
+# - systemctl enable nginx                      - Дополнительная строка в файле cloud-init-nginx.yml
+# - systemctl start nginx                       - Дополнительная строка в файле cloud-init-nginx.yml
+```
+
+## Сервера были созданы
+![Виртуальные машины в YC](images/imageyc-vm.png)
+
+## Создана Target Group. WENB-сервера включены в Target Group.
+![Target Group](images/image-tg.png)
+
+## Создана Backend Group. Backends настроены на Target group, ранее созданную. Настроен healthcheck на корень (/) и порт 80, протокол HTTP
+![Backend Group](images/image-back-group.png)
+
+## Создан HTTP Router. Настроен ну группу Backend, созданную ранее.
+![HTTP router](images/image-http-router.png)
+
+## Создан Application load balancer для распределения трафика на веб-сервера, созданные ранее. Указан HTTP router, созданный ранее, задан listener тип auto, порт 80
+![Application TB](images/image-alb.png)
+
+## Установка Nginx на веб-серверы и создание страницы 
+```
+ansible-playbook -i hosts.cfg nginx-setup.yml --vault-password-file .vault_pass
+```
+![Результат работы скрипта и web-страница](images/image-nginx-config.png)
+
+## Тестирование Работы сайта `curl -v <публичный IP балансера>:80` 
+![curl -v external_ip_alb](images/image-curl.png)
+
+## Тестирование подключения к серверам через Bastion
+![ssh -J user@62.84.115.124 user@vm-yc-elk01.ru-central1.internal -i ~/.ssh/ansible](images/image-test-ssh.png)
+
+## Результат работы Terraform
+![Результат работы terraform. Список созданных серверов и адреса](images/image-tf.png)
+
+## Содержимое файла hosts.cfg 
+```
+user@vm-nix-ubnt09:~/terraform/diplom$ cat ansible/hosts.cfg 
+[all:vars]
+ansible_user=user
+ansible_ssh_private_key_file=~/.ssh/ansible
+ansible_ssh_common_args="-o ProxyCommand=\"ssh -q user@93.77.176.83 -i ~/.ssh/ansible -W %h:%p\""
+
+[bastion]
+bastion ansible_host=93.77.176.83
+
+[nginx]
+web01 ansible_host=vm-yc-web01.ru-central1.internal
+web02 ansible_host=vm-yc-web02.ru-central1.internal
+
+[zabbix]
+zabbix ansible_host=vm-yc-zbx01.ru-central1.internal
+
+[kibana]
+kibana ansible_host=vm-yc-kib01.ru-central1.internal
+
+[elastic]
+elastic ansible_host=vm-yc-elk01.ru-central1.internal
+
+[web:children]
+nginx
+
+[elk:children]
+elastic
+kibana
+
+[all:children]
+bastion
+nginx
+zabbix
+elk
+
+```
+
+
+
+
+
+
 Виртуальные машины не должны обладать внешним Ip-адресом, те находится во внутренней сети. Доступ к ВМ по ssh через бастион-сервер. Доступ к web-порту ВМ через балансировщик yandex cloud.
 ![Результат работы terraform. Список созданных серверов и адреса](images/image-tf.png)
 
-```
-hosts.tpl  - шаблон для inventory
-hosts.tf   - генерация inventory 
-outputs.tf - вывод информации после создания
-ansible/ansible.cfg - настройки ansible
-ansible/hosts.cfg - генерируется terraform, содержит реальные ip и fqdn
-```
+
+
 Содержимое hosts.cfg
 ```
 ser@vm-nix-ubnt09:~/terraform/diplom/ansible$ cat hosts.cfg
