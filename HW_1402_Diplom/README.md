@@ -154,19 +154,41 @@ elk
 ## 2.5. Создан Application load balancer для распределения трафика на веб-сервера, созданные ранее. Указан HTTP router, созданный ранее, задан listener тип auto, порт 80
 ![Application TB](images/image-alb.png)
 
-## 2.6. Выполнена установка Nginx на веб-серверы (vm-yc-web01 и vm-yc-web02) и создание страницы 
+## 2.6. Сеть настроена в соответствии с заданием.
+```
+Доступ к серверам организован через сервер Bastion (vm-yc-bst01). Прямого доступв по SSH к серверам нет.
+Из сети доступны ресурсы:
+  Application Load Balancer по порту http 80 - Публикация приложения 
+  Сервер Kibana по порту 5601 - Сервер просмотра логов
+  Сервер Zabbix по порту 80, по адресу /zabbix - Сервер монитринга
+```
+Список подсетей Yandex Cloud:
+![Список подсетей в YC](images/image-subnet.png)
+
+Список групп безопасности:
+![Список групп безопасности сети](images/image-net-sg.png)
+
+Группа безопасности Bastion-SG:
+![Bastion SG](images/image-net-bastion-sg.png)
+
+## 2.7. Выполнена установка Nginx на веб-серверы (vm-yc-web01 и vm-yc-web02) и создание страницы 
 ```
 ansible-playbook -i hosts.cfg nginx-setup.yml --vault-password-file .vault_pass
 ```
 ![Результат работы скрипта и web-страница](images/image-nginx-config.png)
 
-## 2.7. Тестирование работы
+## 2.8. Тестирование работы
 
-## 2.7.1. Тестирование Работы сайта `curl -v <публичный IP балансера>:80` 
+## 2.8.1. Тестирование Работы сайта 
+```
+`curl -v <публичный IP балансера>:80` 
+```
 ![curl -v external_ip_alb](images/image-curl.png)
 
-## 2.7.2. Тестирование подключения к серверам через Bastion (vm-yc-bst01)
+## 2.8.2. Тестирование подключения к серверам через Bastion (vm-yc-bst01)
 ![ssh -J user@62.84.115.124 user@vm-yc-elk01.ru-central1.internal -i ~/.ssh/ansible](images/image-test-ssh.png)
+
+
 
 
 # 3. Настройка мониторинга
@@ -189,6 +211,8 @@ ansible-playbook -i hosts.cfg nginx-setup.yml --vault-password-file .vault_pass
 ```
 │   ├── vault                        - Каталог для хранения секретов
 │   │   ├── vault.yml                - Зашифрованный файл с паролями
+
+Скриншота не осталось.
 ```
 
 ## 3.2. Установил PostgreSQL 16 на сервер Zabbix (vm-yc-zbx01)
@@ -215,119 +239,65 @@ ansible-playbook -i hosts.cfg zabbix-agents.yml --vault-password-file .vault_pas
 ![Zabbix Console](images/image-zbx-console.png)
 ![Zabbix Monitoring Console](images/image-zbx-monitoring.png)
 
-Пересоздавал сервера много раз, последний вариант страницы мониторинга
+Пересоздавал сервера много раз, последний вариант страницы мониторинга.
 ![Zabbix monitoring console](images/image-zbx-mon2.png)
 
 
 # 4. Настройка логирования 
-
-## 4.1.
 ```
-```
-
-## 4.2.
-```
-```
-
-## 4.2.
-```
-```
-
-## 4.2.
-```
+├── ansible
+│   ├── elasticsearch.yml            - Плейбук для установки и настройки Elasticsearch
+│   ├── filebeat.yml                 - Плейбук для установки и настройки Filebeat на веб-серверах
+│   ├── kibana.yml                   - Плейбук для установки и настройки Kibana
+│   ├── templates                    - Каталог конфигурационных файлов
+│   │   ├── elasticsearch.yml.j2     - Шаблон конфигурации для Elasticsearch
+│   │   ├── filebeat-nginx.yml.j2    - Шаблон конфигурации модуля Filebeat для сбора логов Nginx
+│   │   ├── filebeat.yml.j2          - Шаблон конфигурации Filebeat
+│   │   ├── kibana.yml.j2            - Шаблон конфигурации для Kibana
+│   ├── vars                         - Каталог переменных Ansible
+│   │   └── elastic.yml              - Переменные для настройки Elasticsearch, Kibana и Filebeat
 ```
 
-## 4.2.
+## 4.1. Выполнена установка Elasticsearch на сервере vm-yc-elk01
 ```
-```
-
-# 5. Настройка создания снапшотов
-
-
-### Логи
-Cоздайте ВМ, разверните на ней Elasticsearch. Установите filebeat в ВМ к веб-серверам, настройте на отправку access.log, error.log nginx в Elasticsearch.
-Создайте ВМ, разверните на ней Kibana, сконфигурируйте соединение с Elasticsearch.
-
-```
-ansible/
-├── elasticsearch.yml      # Установка и настройка Elasticsearch на сервере elk
-├── kibana.yml             # Установка и настройка Kibana на сервере kib
-├── filebeat.yml           # Установка Filebeat на web01, web02
-└── vars/
-│   └── elastic.yml        # Переменные для Elastic стека
-├── templates/
-    ├── elasticsearch.yml.j2   # Конфиг Elasticsearch
-    ├── kibana.yml.j2          # Конфиг Kibana
-    ├── filebeat.yml.j2        # Конфиг Filebeat для nginx
-    └── filebeat-nginx.yml.j2  # Конфиг модуля nginx для Filebeat
-```
-
-```
-# 1. Установка Elasticsearch
 ansible-playbook -i hosts.cfg elasticsearch.yml --vault-password-file .vault_pass
+```
+![Установлен ELK](images/image-elk-elkinstall.png)
 
-# 2. Установка Kibana
+## 4.2. Выполнена установка Kibana на сервере vm-yc-kib01
+```
 ansible-playbook -i hosts.cfg kibana.yml --vault-password-file .vault_pass
+```
+![Установлена Kibana](images/image-elk-kib.png)
 
-# 3.0 Установка Filebeat на web01 и web02
+## 4.3. Выполнена установка Filebeat на web-сервера (vm-yc-web01 и vm-yc-web02)
+```
 ansible-playbook -i hosts.cfg filebeat.yml --vault-password-file .vault_pass
 ```
-
-![Установлен ELK](images/image-elk-elkinstall.png)
-![Установлена Kibana](images/image-elk-kib.png)
 ![Установлен Filebeat](images/image-elk-fb.png)
+
+## 4.4. Проверки
+```
+Filebeat работает
+```
 ![Filebeat работает](images/image-elk-fb2.png)
+
+```
+Данные поступают в Elasticsearch, отображаются в Kibana
+```
 ![WEB Интерфейс работает, данные поступают](images/image-elk-web.png)
 
-### Сеть
-Разверните один VPC. Сервера web, Elasticsearch поместите в приватные подсети. Сервера Zabbix, Kibana, application load balancer определите в публичную подсеть.
-
-Настройте [Security Groups](https://cloud.yandex.com/docs/vpc/concepts/security-groups) соответствующих сервисов на входящий трафик только к нужным портам.
-
-Настройте ВМ с публичным адресом, в которой будет открыт только один порт — ssh.  Эта вм будет реализовывать концепцию  [bastion host]( https://cloud.yandex.ru/docs/tutorials/routing/bastion) . Синоним "bastion host" - "Jump host". Подключение  ansible к серверам web и Elasticsearch через данный bastion host можно сделать с помощью  [ProxyCommand](https://docs.ansible.com/ansible/latest/network/user_guide/network_debug_troubleshooting.html#network-delegate-to-vs-proxycommand) . Допускается установка и запуск ansible непосредственно на bastion host.(Этот вариант легче в настройке)
-
-Исходящий доступ в интернет для ВМ внутреннего контура через [NAT-шлюз](https://yandex.cloud/ru/docs/vpc/operations/create-nat-gateway).
-
-![Список подсетей в YC](images/image-subnet.png)
-![Список групп безопасности сети](images/image-net-sg.png)
-![Bastion SG](images/image-net-bastion-sg.png)
 
 
-### Резервное копирование
-Создайте snapshot дисков всех ВМ. Ограничьте время жизни snaphot в неделю. Сами snaphot настройте на ежедневное копирование.
+# 5. Резервное копирование
+```
+├── snapshot.tf                      - Terraform-файл для настройки расписания создания snapshot's
+
+Создано ежедневное расписание snapshot дисков виртуальных машин. Время жизки snapshot - неделя. 
+```
+
+Результат Terraform Apply после применения конфигураии.
 ![Terraform Apply](images/image-snap-terraform.png)
+
+Расписание snapshot в Yandex Cloud
 ![РАсписание snapshot в YC](images/image-snap-yc.png)
-### Дополнительно
-Не входит в минимальные требования. 
-
-1. Для Zabbix можно реализовать разделение компонент - frontend, server, database. Frontend отдельной ВМ поместите в публичную подсеть, назначте публичный IP. Server поместите в приватную подсеть, настройте security group на разрешение трафика между frontend и server. Для Database используйте [Yandex Managed Service for PostgreSQL](https://cloud.yandex.com/en-ru/services/managed-postgresql). Разверните кластер из двух нод с автоматическим failover.
-2. Вместо конкретных ВМ, которые входят в target group, можно создать [Instance Group](https://cloud.yandex.com/en/docs/compute/concepts/instance-groups/), для которой настройте следующие правила автоматического горизонтального масштабирования: минимальное количество ВМ на зону — 1, максимальный размер группы — 3.
-3. В Elasticsearch добавьте мониторинг логов самого себя, Kibana, Zabbix, через filebeat. Можно использовать logstash тоже.
-4. Воспользуйтесь Yandex Certificate Manager, выпустите сертификат для сайта, если есть доменное имя. Перенастройте работу балансера на HTTPS, при этом нацелен он будет на HTTP веб-серверов.
-
-## Выполнение работы
-На этом этапе вы непосредственно выполняете работу. При этом вы можете консультироваться с руководителем по поводу вопросов, требующих уточнения.
-
-⚠️ В случае недоступности ресурсов Elastic для скачивания рекомендуется разворачивать сервисы с помощью docker контейнеров, основанных на официальных образах.
-
-**Важно**: Ещё можно задавать вопросы по поводу того, как реализовать ту или иную функциональность. И руководитель определяет, правильно вы её реализовали или нет. Любые вопросы, которые не освещены в этом документе, стоит уточнять у руководителя. Если его требования и указания расходятся с указанными в этом документе, то приоритетны требования и указания руководителя.
-
-## Критерии сдачи
-1. Инфраструктура отвечает минимальным требованиям, описанным в [Задаче](#Задача).
-2. Предоставлен доступ ко всем ресурсам, у которых предполагается веб-страница (сайт, Kibana, Zabbix).
-3. Для ресурсов, к которым предоставить доступ проблематично, предоставлены скриншоты, команды, stdout, stderr, подтверждающие работу ресурса.
-4. Работа оформлена в отдельном репозитории в GitHub или в [Google Docs](https://docs.google.com/), разрешён доступ по ссылке. 
-5. Код размещён в репозитории в GitHub.
-6. Работа оформлена так, чтобы были понятны ваши решения и компромиссы. 
-7. Если использованы дополнительные репозитории, доступ к ним открыт. 
-
-## Как правильно задавать вопросы дипломному руководителю
-Что поможет решить большинство частых проблем:
-1. Попробовать найти ответ сначала самостоятельно в интернете или в материалах курса и только после этого спрашивать у дипломного руководителя. Навык поиска ответов пригодится вам в профессиональной деятельности.
-2. Если вопросов больше одного, присылайте их в виде нумерованного списка. Так дипломному руководителю будет проще отвечать на каждый из них.
-3. При необходимости прикрепите к вопросу скриншоты и стрелочкой покажите, где не получается. Программу для этого можно скачать [здесь](https://app.prntscr.com/ru/).
-
-Что может стать источником проблем:
-1. Вопросы вида «Ничего не работает. Не запускается. Всё сломалось». Дипломный руководитель не сможет ответить на такой вопрос без дополнительных уточнений. Цените своё время и время других.
-2. Откладывание выполнения дипломной работы на последний момент.
-3. Ожидание моментального ответа на свой вопрос. Дипломные руководители — работающие инженеры, которые занимаются, кроме преподавания, своими проектами. Их время ограничено, поэтому постарайтесь задавать правильные вопросы, чтобы получать быстрые ответы :)
