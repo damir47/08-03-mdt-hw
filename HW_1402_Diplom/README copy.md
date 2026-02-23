@@ -32,9 +32,19 @@ outputs.tf - вывод информации после создания
 ansible/ansible.cfg - настройки ansible
 ansible/hosts.cfg - генерируется terraform, содержит реальные ip и fqdn
 ```
-Содержимое hosts.cfg 
+
+
+
+
+
+Виртуальные машины не должны обладать внешним Ip-адресом, те находится во внутренней сети. Доступ к ВМ по ssh через бастион-сервер. Доступ к web-порту ВМ через балансировщик yandex cloud.
+![Результат работы terraform. Список созданных серверов и адреса](images/image-tf.png)
+
+
+
+Содержимое hosts.cfg
 ```
-ser@vm-nix-ubnt09:~/terraform/diplom/ansible$ cat hosts.cfg 
+ser@vm-nix-ubnt09:~/terraform/diplom/ansible$ cat hosts.cfg
 [all:vars]
 ansible_user=user
 ansible_ssh_private_key_file=~/.ssh/ansible
@@ -71,6 +81,36 @@ elk
 
 ```
 
+![ssh -J user@62.84.115.124 user@vm-yc-elk01.ru-central1.internal -i ~/.ssh/ansible](images/image-test-ssh.png)
+
+Что мы видим в yandex cloud:
+![Виртуальные машины в YC](images/imageyc-vm.png)
+
+
+Настройка балансировщика:
+1. Создайте [Target Group](https://cloud.yandex.com/docs/application-load-balancer/concepts/target-group), включите в неё две созданных ВМ.
+![Target Group](images/image-tg.png)
+
+2. Создайте [Backend Group](https://cloud.yandex.com/docs/application-load-balancer/concepts/backend-group), настройте backends на target group, ранее созданную. Настройте healthcheck на корень (/) и порт 80, протокол HTTP.
+![Backend Group](images/image-back-group.png)
+
+3. Создайте [HTTP router](https://cloud.yandex.com/docs/application-load-balancer/concepts/http-router). Путь укажите — /, backend group — созданную ранее.
+![HTTP router](images/image-http-router.png)
+
+4. Создайте [Application load balancer](https://cloud.yandex.com/en/docs/application-load-balancer/) для распределения трафика на веб-сервера, созданные ранее. Укажите HTTP router, созданный ранее, задайте listener тип auto, порт 80.
+![Application TB](images/image-alb.png)
+
+
+Протестируйте сайт
+`curl -v <публичный IP балансера>:80` 
+![curl -v external_ip_alb](images/image-curl.png)
+
+Настройка сайта через Ansible:
+```
+ansible-playbook -i hosts.cfg nginx-setup.yml --vault-password-file .vault_pass
+
+```
+![Результат работы скррипта и web-страница](images/image-nginx-config.png)
 
 
 ### Мониторинг

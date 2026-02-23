@@ -8,11 +8,10 @@
 
 ---------
 
-# Общая структура проекта
+# 1. Общая структура проекта
 
 ```
 user@vm-nix-ubnt09:~/terraform/diplom$ tree -L 3
-
 ├── ansible
 │   ├── ansible.cfg                  - Основной конфигурационный файл Ansible
 │   ├── elasticsearch.yml            - Плейбук для установки и настройки Elasticsearch
@@ -53,11 +52,9 @@ user@vm-nix-ubnt09:~/terraform/diplom$ tree -L 3
 - cloud-init.yml 
 - cloud-init-nginx.yml
 - /ansible/vault/
-
 ```
 
-
-# Скрипты Terraform: Создание серверного окружения в Яндекс облаке.
+# 2. Скрипты Terraform: Создание серверного окружения в Яндекс облаке.
 
 ```
 ├── ansible
@@ -104,37 +101,11 @@ runcmd:
 # - systemctl start nginx                       - Дополнительная строка в файле cloud-init-nginx.yml
 ```
 
-## Сервера были созданы
-![Виртуальные машины в YC](images/imageyc-vm.png)
+## 2.1. Результат выполнения Terraform скрипта. Сервера созданы и видны в консоли Yandex Cloud
 
-## Создана Target Group. WENB-сервера включены в Target Group.
-![Target Group](images/image-tg.png)
-
-## Создана Backend Group. Backends настроены на Target group, ранее созданную. Настроен healthcheck на корень (/) и порт 80, протокол HTTP
-![Backend Group](images/image-back-group.png)
-
-## Создан HTTP Router. Настроен ну группу Backend, созданную ранее.
-![HTTP router](images/image-http-router.png)
-
-## Создан Application load balancer для распределения трафика на веб-сервера, созданные ранее. Указан HTTP router, созданный ранее, задан listener тип auto, порт 80
-![Application TB](images/image-alb.png)
-
-## Установка Nginx на веб-серверы и создание страницы 
-```
-ansible-playbook -i hosts.cfg nginx-setup.yml --vault-password-file .vault_pass
-```
-![Результат работы скрипта и web-страница](images/image-nginx-config.png)
-
-## Тестирование Работы сайта `curl -v <публичный IP балансера>:80` 
-![curl -v external_ip_alb](images/image-curl.png)
-
-## Тестирование подключения к серверам через Bastion
-![ssh -J user@62.84.115.124 user@vm-yc-elk01.ru-central1.internal -i ~/.ssh/ansible](images/image-test-ssh.png)
-
-## Результат работы Terraform
 ![Результат работы terraform. Список созданных серверов и адреса](images/image-tf.png)
-
-## Содержимое файла hosts.cfg 
+![Виртуальные машины в YC](images/imageyc-vm.png)
+Содержимое файла hosts.cfg 
 ```
 user@vm-nix-ubnt09:~/terraform/diplom$ cat ansible/hosts.cfg 
 [all:vars]
@@ -170,138 +141,108 @@ bastion
 nginx
 zabbix
 elk
-
 ```
-
-
-
-
-
-
-Виртуальные машины не должны обладать внешним Ip-адресом, те находится во внутренней сети. Доступ к ВМ по ssh через бастион-сервер. Доступ к web-порту ВМ через балансировщик yandex cloud.
-![Результат работы terraform. Список созданных серверов и адреса](images/image-tf.png)
-
-
-
-Содержимое hosts.cfg
-```
-ser@vm-nix-ubnt09:~/terraform/diplom/ansible$ cat hosts.cfg
-[all:vars]
-ansible_user=user
-ansible_ssh_private_key_file=~/.ssh/ansible
-ansible_ssh_common_args="-o ProxyCommand=\"ssh -q user@62.84.115.124 -i ~/.ssh/ansible -W %h:%p\""
-
-[bastion]
-bastion ansible_host=62.84.115.124
-
-[nginx]
-web01 ansible_host=vm-yc-web01.ru-central1.internal
-web02 ansible_host=vm-yc-web02.ru-central1.internal
-
-[zabbix]
-zabbix ansible_host=vm-yc-zbx01.ru-central1.internal
-
-[kibana]
-kibana ansible_host=vm-yc-kib01.ru-central1.internal
-
-[elastic]
-elastic ansible_host=vm-yc-elk01.ru-central1.internal
-
-[web:children]
-nginx
-
-[elk:children]
-elastic
-kibana
-
-[all:children]
-bastion
-nginx
-zabbix
-elk
-
-```
-
-![ssh -J user@62.84.115.124 user@vm-yc-elk01.ru-central1.internal -i ~/.ssh/ansible](images/image-test-ssh.png)
-
-Что мы видим в yandex cloud:
-![Виртуальные машины в YC](images/imageyc-vm.png)
-
-
-Настройка балансировщика:
-1. Создайте [Target Group](https://cloud.yandex.com/docs/application-load-balancer/concepts/target-group), включите в неё две созданных ВМ.
+## 2.2. Создана Target Group. WEB-сервера включены в Target Group.
 ![Target Group](images/image-tg.png)
 
-2. Создайте [Backend Group](https://cloud.yandex.com/docs/application-load-balancer/concepts/backend-group), настройте backends на target group, ранее созданную. Настройте healthcheck на корень (/) и порт 80, протокол HTTP.
+## 2.3. Создана Backend Group. Backends настроены на Target group, ранее созданную. Настроен healthcheck на корень (/) и порт 80, протокол HTTP
 ![Backend Group](images/image-back-group.png)
 
-3. Создайте [HTTP router](https://cloud.yandex.com/docs/application-load-balancer/concepts/http-router). Путь укажите — /, backend group — созданную ранее.
+## 2.4. Создан HTTP Router. Настроен ну группу Backend, созданную ранее.
 ![HTTP router](images/image-http-router.png)
 
-4. Создайте [Application load balancer](https://cloud.yandex.com/en/docs/application-load-balancer/) для распределения трафика на веб-сервера, созданные ранее. Укажите HTTP router, созданный ранее, задайте listener тип auto, порт 80.
+## 2.5. Создан Application load balancer для распределения трафика на веб-сервера, созданные ранее. Указан HTTP router, созданный ранее, задан listener тип auto, порт 80
 ![Application TB](images/image-alb.png)
 
-
-Протестируйте сайт
-`curl -v <публичный IP балансера>:80` 
-![curl -v external_ip_alb](images/image-curl.png)
-
-Настройка сайта через Ansible:
+## 2.6. Выполнена установка Nginx на веб-серверы (vm-yc-web01 и vm-yc-web02) и создание страницы 
 ```
 ansible-playbook -i hosts.cfg nginx-setup.yml --vault-password-file .vault_pass
+```
+![Результат работы скрипта и web-страница](images/image-nginx-config.png)
+
+## 2.7. Тестирование работы
+
+## 2.7.1. Тестирование Работы сайта `curl -v <публичный IP балансера>:80` 
+![curl -v external_ip_alb](images/image-curl.png)
+
+## 2.7.2. Тестирование подключения к серверам через Bastion (vm-yc-bst01)
+![ssh -J user@62.84.115.124 user@vm-yc-elk01.ru-central1.internal -i ~/.ssh/ansible](images/image-test-ssh.png)
+
+
+# 3. Настройка мониторинга
 
 ```
-![Результат работы скррипта и web-страница](images/image-nginx-config.png)
-
-### Мониторинг
-Создайте ВМ, разверните на ней Zabbix. На каждую ВМ установите Zabbix Agent, настройте агенты на отправление метрик в Zabbix. 
-
-Настройте дешборды с отображением метрик, минимальный набор — по принципу USE (Utilization, Saturation, Errors) для CPU, RAM, диски, сеть, http запросов к веб-серверам. Добавьте необходимые tresholds на соответствующие графики.
-
-```
-ansible/
-├── site.yml                    - Запустить все Playbook
-├── ansible.cfg                 - Конфигурация Ansible
-├── hosts.cfg                   - Сгенерированный terraform inventory
-├── install-postgresql.yml      - Установка и настройка PostgreSQL на сервер Zabbix
-├── zabbix-server.yml           - Установка и настройка  сервера Zabbix
-├── zabbix-web-setup.yml        - Настройка Web-сервера и пользователя Zabbix
-├── zabbix-agents.yml           - Установка и настройка агентов Zabbix
-├── requirements.yml            - Коллекции Ansible Zabbix (не стал использовать)
-├── vault/
-│   └── vault.yml               - Хранение секретов
-└── templates/
-    ├── zabbix_agentd.conf.j2   - Конфигурация агентов Zabbix
-    └── zabbix.conf.php.j2      - Конфигурация сервера Zabbix
+├── ansible
+│   ├── hosts.cfg                    - Сгенерированный Terraform инвентарный файл для работы Ansible
+│   ├── install-postgresql.yml       - Плейбук для установки и первичной настройки PostgreSQL на сервере Zabbix
+│   ├── templates                    - Каталог конфигурационных файлов
+│   │   ├── zabbix_agentd.conf.j2    - Шаблон конфигурации для Zabbix-агента
+│   │   └── zabbix.conf.php.j2       - Шаблон конфигурационного файла для веб-интерфейса Zabbix
+│   ├── vault                        - Каталог для хранения секретов
+│   │   ├── vault.yml                - Зашифрованный файл с паролями
+│   ├── zabbix-agents.yml            - Плейбук для установки и настройки Zabbix-агентов
+│   ├── zabbix-server.yml            - Плейбук для первоначальной установки Zabbix-сервера
+│   └── zabbix-web-setup.yml         - Плейбук для настройки веб-интерфейса Zabbix-сервера и установки пароля администратора
 ```
 
+## 3.1. Создал хранилище секретов
 ```
-После выполнения основных скриптов terraform 
-1) Создали хранилище секретов
-2) Установили на сервер Zabbix PGSQL
-cd ansible
+│   ├── vault                        - Каталог для хранения секретов
+│   │   ├── vault.yml                - Зашифрованный файл с паролями
+```
+
+## 3.2. Установил PostgreSQL 16 на сервер Zabbix (vm-yc-zbx01)
+```
 ansible-playbook -i hosts.cfg install-postgresql.yml --vault-password-file .vault_pass
-3) Установили Zabbix Server. Настройку пользователя вынес в отдельный скрипт.
-ansible-playbook -i hosts.cfg zabbix-server.yml --vault-password-file .vault_pass
-ansible-playbook -i hosts.cfg zabbix-web-setup.yml --vault-password-file .vault_pass
-
-4) Установили Zabbix Agents
-ansible-playbook -i hosts.cfg zabbix-agents.yml --vault-password-file .vault_pass
 ```
 ![Установили на сервер Zabbix PGSQL](images/image-zbx-1-pg.png)
+
+## 3.3. Установил серверную часть Zabbix. Настроили web-интерфейс и установили пароль администратора
+```
+ansible-playbook -i hosts.cfg zabbix-server.yml --vault-password-file .vault_pass
+ansible-playbook -i hosts.cfg zabbix-web-setup.yml --vault-password-file .vault_pass
+```
 ![Установили Zabbix Server](images/image-zbx-2-srv.png)
+
+## 3.4. Установил агенты Zabbix на все сервера кроме bastion.
+```
+ansible-playbook -i hosts.cfg zabbix-agents.yml --vault-password-file .vault_pass
+```
 ![Установили Zabbix Agents](images/image-zbx-3-agent.png)
 
-```
-Настройка мониторинга
-```
-![Zabbix Console](images/image-zbx-console.png)
+## 3.5. Настроил консоль мониторинга
 
+![Zabbix Console](images/image-zbx-console.png)
 ![Zabbix Monitoring Console](images/image-zbx-monitoring.png)
 
 Пересоздавал сервера много раз, последний вариант страницы мониторинга
-
 ![Zabbix monitoring console](images/image-zbx-mon2.png)
+
+
+# 4. Настройка логирования 
+
+## 4.1.
+```
+```
+
+## 4.2.
+```
+```
+
+## 4.2.
+```
+```
+
+## 4.2.
+```
+```
+
+## 4.2.
+```
+```
+
+# 5. Настройка создания снапшотов
+
 
 ### Логи
 Cоздайте ВМ, разверните на ней Elasticsearch. Установите filebeat в ВМ к веб-серверам, настройте на отправку access.log, error.log nginx в Elasticsearch.
