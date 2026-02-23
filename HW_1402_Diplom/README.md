@@ -54,6 +54,28 @@ user@vm-nix-ubnt09:~/terraform/diplom$ tree -L 3
 - /ansible/vault/
 ```
 
+```
+Для создание проекта потребуется:
+1. Сформировать SSH ключи.
+2. Сформировать vault-файл
+3. Настроить провайдера yandex (создать файл .terraformrc, установить CLI)
+4. Оредактировать файл variables.tf, указать свои данные для подключения к облаку
+5. Создать инфраструктуру через Terraform Apply
+6. Выполнить настройку серверов через запуск плейбука ansible/site.yml или последовательного запуска плейбуков:
+а) Настройка nginx на web-серверах: 
+nginx-setup.yml
+б) Настройка сервера Zabbix и Установка агентов
+nstall-postgresql.yml
+zabbix-server.yml
+zabbix-web-setup.yml
+zabbix-agents.yml
+в) Настройка серверов ELK-стека
+elasticsearch.yml
+kibana.yml
+filebeat.yml
+7. Настройка мониторинга и сбора, отображения логов на целевых серверах
+```
+
 # 2. Скрипты Terraform: Создание серверного окружения в Яндекс облаке.
 
 ```
@@ -286,7 +308,6 @@ Filebeat работает
 Данные поступают в Elasticsearch, отображаются в Kibana
 ```
 ![WEB Интерфейс работает, данные поступают](images/image-elk-web.png)
-
 
 
 # 5. Резервное копирование
